@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcadLink - Teacher Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Notifications Area */
+        .notifications-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #667eea;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-card.low-load {
+            border-left-color: #fbbf24;
+            background: #fffbeb;
+        }
+
+        .notification-card.inactive {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .notification-card.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .notification-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .notification-content h3 {
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .notification-content p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .notification-action {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-action:hover {
+            transform: scale(1.05);
+        }
+
+        /* Main Content Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Card Styling */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Priority Setting */
+        .priority-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .priority-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .priority-input-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .priority-input-group input,
+        .priority-input-group select,
+        .priority-input-group textarea {
+            padding: 10px 12px;
+            border: 2px solid #e6e9f8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .priority-input-group input:focus,
+        .priority-input-group select:focus,
+        .priority-input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .difficulty-levels {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .difficulty-btn {
+            padding: 10px 14px;
+            border: 2px solid #e6e9f8;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #667eea;
+            background: #f3f6ff;
+        }
+
+        .difficulty-btn.easy {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .difficulty-btn.easy.selected {
+            background: #10b981;
+            color: white;
+        }
+
+        .difficulty-btn.medium {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .difficulty-btn.medium.selected {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .difficulty-btn.hard {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .difficulty-btn.hard.selected {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Activity Tracking */
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th {
+            background: #f3f6ff;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e6e9f8;
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        .activity-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .activity-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Marks Management */
+        .marks-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .marks-input-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .marks-input-group select,
+        .marks-input-group input {
+            padding: 10px 12px;
+            border: 2px solid #e6e9f8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .marks-input-group select:focus,
+        .marks-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Student List */
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .student-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .marks-display {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .streak-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .streak-fire {
+            font-size: 16px;
+        }
+
+        .edit-marks-btn {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-marks-btn:hover {
+            background: #764ba2;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* Load Status */
+        .load-status {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .load-stat {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .load-stat.low {
+            border-left-color: #fbbf24;
+        }
+
+        .load-stat.medium {
+            border-left-color: #3b82f6;
+        }
+
+        .load-stat.high {
+            border-left-color: #10b981;
+        }
+
+        .load-stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .load-stat-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .marks-input-group {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-right {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .student-item {
+                grid-template-columns: 1fr;
+            }
+
+            .notifications-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inactive-notice {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .inactive-notice p {
+            font-size: 14px;
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+
+        .dismiss-btn {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .dismiss-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📚 Teacher Dashboard</h1>
+        <div class="header-right">
+            <div class="user-info">
+                <span id="teacherName">Teacher Name</span>
+                <span id="teacherClass">Class 10-A</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Notifications & Activity Status -->
+        <div class="notifications-section">
+            <!-- Low Load Notification -->
+            <div id="lowLoadNotif" class="notification-card low-load" style="display: none;">
+                <div class="notification-icon">⚠️</div>
+                <div class="notification-content">
+                    <h3>Low Class Activity</h3>
+                    <p id="lowLoadMsg">The class hasn't been active in the last 2 hours. Consider engaging students with assignments.</p>
+                    <button class="notification-action" onclick="engageStudents()">Create Assignment</button>
+                </div>
+            </div>
+
+            <!-- Your Inactive Status -->
+            <div id="inactiveNotif" class="notification-card inactive" style="display: none;">
+                <div class="notification-icon">😴</div>
+                <div class="notification-content">
+                    <h3>You've Been Inactive</h3>
+                    <p id="inactiveMsg">It's been 1 hour since your last activity. Your students need your guidance!</p>
+                    <button class="notification-action" onclick="markActive()">Mark Active Now</button>
+                </div>
+            </div>
+
+            <!-- Activity Check-in -->
+            <div class="notification-card success">
+                <div class="notification-icon">✅</div>
+                <div class="notification-content">
+                    <h3>Daily Check-in</h3>
+                    <p>Stay active to help your students learn better. Check in now to let them know you're available.</p>
+                    <button class="notification-action" onclick="checkInNow()">Check In</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Status Overview -->
+        <div class="section-title">📊 Class Activity Overview</div>
+        <div class="load-status">
+            <div class="load-stat high">
+                <div class="load-stat-number" id="activeCount">18</div>
+                <div class="load-stat-label">Students Active</div>
+            </div>
+            <div class="load-stat medium">
+                <div class="load-stat-number" id="ongoingCount">5</div>
+                <div class="load-stat-label">Ongoing Assignments</div>
+            </div>
+            <div class="load-stat low">
+                <div class="load-stat-number" id="needHelpCount">3</div>
+                <div class="load-stat-label">Need Help</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-grid">
+            <!-- Priority & Content Difficulty -->
+            <div class="card">
+                <h2>📝 Set Priority & Content Load</h2>
+                <div class="priority-form">
+                    <div class="priority-input-group">
+                        <label>Topic/Assignment Name</label>
+                        <input type="text" id="priorityTopic" placeholder="e.g., Algebra Basics">
+                    </div>
+
+                    <div class="priority-input-group">
+                        <label>Difficulty Level</label>
+                        <div class="difficulty-levels">
+                            <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">🟢 Easy</button>
+                            <button class="difficulty-btn medium" onclick="selectDifficulty('medium')">🟡 Medium</button>
+                            <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">🔴 Hard</button>
+                        </div>
+                        <input type="hidden" id="selectedDifficulty" value="">
+                    </div>
+
+                    <div class="priority-input-group">
+                        <label>Estimated Duration (minutes)</label>
+                        <input type="number" id="priorityDuration" placeholder="e.g., 45" min="5" max="180">
+                    </div>
+
+                    <div class="priority-input-group">
+                        <label>Description</label>
+                        <textarea id="priorityDescription" placeholder="Brief description of the content..." rows="3"></textarea>
+                    </div>
+
+                    <button class="btn-primary" onclick="setPriority()">Set Priority & Notify Students</button>
+                </div>
+
+                <div class="inactive-notice" id="prioritySuccess" style="display: none;">
+                    <p>✅ Priority has been set and students have been notified about the content difficulty!</p>
+                </div>
+            </div>
+
+            <!-- Add Practical Marks -->
+            <div class="card">
+                <h2>📊 Add Practical Marks</h2>
+                <div class="marks-form">
+                    <div class="marks-input-group">
+                        <select id="studentSelect" placeholder="Select Student">
+                            <option value="">-- Select Student --</option>
+                            <option value="student1">Aarav Kumar</option>
+                            <option value="student2">Bhavna Singh</option>
+                            <option value="student3">Chirag Patel</option>
+                            <option value="student4">Divya Sharma</option>
+                            <option value="student5">Eshaan Gupta</option>
+                        </select>
+                        <input type="number" id="marksInput" placeholder="Marks (0-100)" min="0" max="100">
+                        <button class="btn-primary" onclick="addMarks()">Add Marks</button>
+                    </div>
+
+                    <div class="student-list" id="studentMarks">
+                        <div class="student-item">
+                            <span class="student-name">Aarav Kumar</span>
+                            <span class="marks-display">85/100</span>
+                            <div class="streak-display">
+                                <span class="streak-fire">🔥</span>
+                                <span>7 days</span>
+                            </div>
+                            <button class="edit-marks-btn" onclick="editMarkModal('student1', 'Aarav Kumar', 85, 7)">Edit</button>
+                        </div>
+
+                        <div class="student-item">
+                            <span class="student-name">Bhavna Singh</span>
+                            <span class="marks-display">92/100</span>
+                            <div class="streak-display">
+                                <span class="streak-fire">🔥</span>
+                                <span>12 days</span>
+                            </div>
+                            <button class="edit-marks-btn" onclick="editMarkModal('student2', 'Bhavna Singh', 92, 12)">Edit</button>
+                        </div>
+
+                        <div class="student-item">
+                            <span class="student-name">Chirag Patel</span>
+                            <span class="marks-display">78/100</span>
+                            <div class="streak-display">
+                                <span class="streak-fire">🔥</span>
+                                <span>3 days</span>
+                            </div>
+                            <button class="edit-marks-btn" onclick="editMarkModal('student3', 'Chirag Patel', 78, 3)">Edit</button>
+                        </div>
+
+                        <div class="student-item">
+                            <span class="student-name">Divya Sharma</span>
+                            <span class="marks-display">88/100</span>
+                            <div class="streak-display">
+                                <span class="streak-fire">🔥</span>
+                                <span>9 days</span>
+                            </div>
+                            <button class="edit-marks-btn" onclick="editMarkModal('student4', 'Divya Sharma', 88, 9)">Edit</button>
+                        </div>
+
+                        <div class="student-item">
+                            <span class="student-name">Eshaan Gupta</span>
+                            <span class="marks-display">95/100</span>
+                            <div class="streak-display">
+                                <span class="streak-fire">🔥</span>
+                                <span>15 days</span>
+                            </div>
+                            <button class="edit-marks-btn" onclick="editMarkModal('student5', 'Eshaan Gupta', 95, 15)">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Activity & Engagement -->
+        <div class="card" style="margin-top: 30px;">
+            <h2>👥 Student Activity Status</h2>
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Last Active</th>
+                        <th>Status</th>
+                        <th>Assignments Done</th>
+                        <th>Streak</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Aarav Kumar</td>
+                        <td>5 mins ago</td>
+                        <td><span class="activity-status status-active">Active</span></td>
+                        <td>8/10</td>
+                        <td>🔥 7 days</td>
+                        <td><button class="edit-marks-btn" onclick="alert('Send motivation message')">Message</button></td>
+                    </tr>
+                    <tr>
+                        <td>Bhavna Singh</td>
+                        <td>12 mins ago</td>
+                        <td><span class="activity-status status-active">Active</span></td>
+                        <td>9/10</td>
+                        <td>🔥 12 days</td>
+                        <td><button class="edit-marks-btn" onclick="alert('Send praise message')">Message</button></td>
+                    </tr>
+                    <tr>
+                        <td>Chirag Patel</td>
+                        <td>2 hours ago</td>
+                        <td><span class="activity-status status-inactive">Inactive</span></td>
+                        <td>5/10</td>
+                        <td>🔥 3 days</td>
+                        <td><button class="edit-marks-btn" onclick="alert('Send engagement notice')">Notify</button></td>
+                    </tr>
+                    <tr>
+                        <td>Divya Sharma</td>
+                        <td>15 mins ago</td>
+                        <td><span class="activity-status status-active">Active</span></td>
+                        <td>8/10</td>
+                        <td>🔥 9 days</td>
+                        <td><button class="edit-marks-btn" onclick="alert('Send motivation message')">Message</button></td>
+                    </tr>
+                    <tr>
+                        <td>Eshaan Gupta</td>
+                        <td>1 min ago</td>
+                        <td><span class="activity-status status-active">Active</span></td>
+                        <td>10/10</td>
+                        <td>🔥 15 days</td>
+                        <td><button class="edit-marks-btn" onclick="alert('Send praise message')">Message</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for Editing Marks -->
+    <div id="editMarksModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Student Marks & Streak</h3>
+                <button class="close-btn" onclick="closeModal('editMarksModal')">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Student</label>
+                    <input type="text" id="modalStudentName" readonly style="padding: 10px 12px; border: 2px solid #e6e9f8; border-radius: 8px; background: #f9fafb;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Practical Marks (0-100)</label>
+                    <input type="number" id="modalMarks" min="0" max="100" style="padding: 10px 12px; border: 2px solid #e6e9f8; border-radius: 8px; width: 100%;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Streak (Days)</label>
+                    <input type="number" id="modalStreak" min="0" style="padding: 10px 12px; border: 2px solid #e6e9f8; border-radius: 8px; width: 100%;">
+                </div>
+                <p style="font-size: 13px; color: #666; background: #f3f6ff; padding: 10px; border-radius: 6px;">💡 The streak increases daily engagement. It motivates students to participate consistently!</p>
+                <button class="btn-primary" onclick="saveMarkChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Teacher Data
+        let teacherData = {
+            name: 'Mr. Sharma',
+            class: 'Class 10-A',
+            lastActive: Date.now(),
+            isActive: true,
+            priority: {
+                topic: '',
+                difficulty: '',
+                duration: 0
+            },
+            students: {
+                student1: { name: 'Aarav Kumar', marks: 85, streak: 7, lastActive: Date.now() - 5 * 60000 },
+                student2: { name: 'Bhavna Singh', marks: 92, streak: 12, lastActive: Date.now() - 12 * 60000 },
+                student3: { name: 'Chirag Patel', marks: 78, streak: 3, lastActive: Date.now() - 2 * 3600000 },
+                student4: { name: 'Divya Sharma', marks: 88, streak: 9, lastActive: Date.now() - 15 * 60000 },
+                student5: { name: 'Eshaan Gupta', marks: 95, streak: 15, lastActive: Date.now() - 1 * 60000 }
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshActivityStatus();
+            setInterval(checkInactivity, 60000); // Check every minute
+            setInterval(refreshActivityStatus, 30000); // Refresh status every 30 seconds
+        });
+
+        // Check if teacher is inactive
+        function checkInactivity() {
+            const timeSinceActive = Date.now() - teacherData.lastActive;
+            const oneHour = 60 * 60 * 1000;
+
+            if (timeSinceActive > oneHour && teacherData.isActive) {
+                teacherData.isActive = false;
+                document.getElementById('inactiveNotif').style.display = 'flex';
+            }
+        }
+
+        // Mark teacher as active
+        function markActive() {
+            teacherData.lastActive = Date.now();
+            teacherData.isActive = true;
+            document.getElementById('inactiveNotif').style.display = 'none';
+            alert('✅ You have been marked as active! Students are now notified.');
+        }
+
+        // Check-in now
+        function checkInNow() {
+            markActive();
+        }
+
+        // Refresh activity status
+        function refreshActivityStatus() {
+            let activeCount = 0;
+            let needHelpCount = 0;
+
+            for (let key in teacherData.students) {
+                const student = teacherData.students[key];
+                const timeSinceActive = Date.now() - student.lastActive;
+                if (timeSinceActive < 15 * 60 * 1000) { // Less than 15 minutes
+                    activeCount++;
+                }
+                if (timeSinceActive > 2 * 3600000) { // More than 2 hours
+                    needHelpCount++;
+                }
+            }
+
+            document.getElementById('activeCount').textContent = activeCount;
+            document.getElementById('needHelpCount').textContent = needHelpCount;
+
+            // Show low load notification if not many are active
+            if (activeCount < 5) {
+                document.getElementById('lowLoadNotif').style.display = 'flex';
+            } else {
+                document.getElementById('lowLoadNotif').style.display = 'none';
+            }
+        }
+
+        // Select difficulty
+        function selectDifficulty(level) {
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedDifficulty').value = level;
+        }
+
+        // Set priority
+        function setPriority() {
+            const topic = document.getElementById('priorityTopic').value;
+            const difficulty = document.getElementById('selectedDifficulty').value;
+            const duration = document.getElementById('priorityDuration').value;
+            const description = document.getElementById('priorityDescription').value;
+
+            if (!topic || !difficulty || !duration) {
+                alert('⚠️ Please fill in all fields!');
+                return;
+            }
+
+            teacherData.priority = { topic, difficulty, duration, description };
+            
+            // Show success message
+            const successDiv = document.getElementById('prioritySuccess');
+            successDiv.style.display = 'block';
+            successDiv.innerHTML = `✅ Priority "${topic}" (${difficulty.toUpperCase()}) has been set and students have been notified!`;
+
+            // Clear form
+            document.getElementById('priorityTopic').value = '';
+            document.getElementById('priorityDuration').value = '';
+            document.getElementById('priorityDescription').value = '';
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('selectedDifficulty').value = '';
+
+            setTimeout(() => { successDiv.style.display = 'none'; }, 3000);
+        }
+
+        // Add marks
+        function addMarks() {
+            const studentId = document.getElementById('studentSelect').value;
+            const marks = parseInt(document.getElementById('marksInput').value);
+
+            if (!studentId || isNaN(marks) || marks < 0 || marks > 100) {
+                alert('⚠️ Please select a student and enter valid marks (0-100)!');
+                return;
+            }
+
+            if (teacherData.students[studentId]) {
+                teacherData.students[studentId].marks = marks;
+                alert(`✅ Marks updated for ${teacherData.students[studentId].name}!`);
+                document.getElementById('studentSelect').value = '';
+                document.getElementById('marksInput').value = '';
+                location.reload(); // Refresh to show updated marks
+            }
+        }
+
+        // Edit mark modal
+        function editMarkModal(studentId, studentName, marks, streak) {
+            document.getElementById('modalStudentName').value = studentName;
+            document.getElementById('modalMarks').value = marks;
+            document.getElementById('modalStreak').value = streak;
+            document.getElementById('editMarksModal').classList.add('active');
+            window.currentEditStudent = { studentId, studentName, marks, streak };
+        }
+
+        // Save mark changes
+        function saveMarkChanges() {
+            const newMarks = parseInt(document.getElementById('modalMarks').value);
+            const newStreak = parseInt(document.getElementById('modalStreak').value);
+
+            if (isNaN(newMarks) || isNaN(newStreak) || newMarks < 0 || newMarks > 100 || newStreak < 0) {
+                alert('⚠️ Please enter valid values!');
+                return;
+            }
+
+            if (window.currentEditStudent) {
+                teacherData.students[window.currentEditStudent.studentId].marks = newMarks;
+                teacherData.students[window.currentEditStudent.studentId].streak = newStreak;
+                closeModal('editMarksModal');
+                alert('✅ Changes saved successfully!');
+                location.reload();
+            }
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Engage students
+        function engageStudents() {
+            alert('📝 Redirecting to assignment creation...\n\nTip: Create assignments with appropriate difficulty levels to keep students engaged!');
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logged out successfully!');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editMarksModal');
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
