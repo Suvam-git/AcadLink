@@ -515,9 +515,13 @@
                 if (remember) {
                     localStorage.setItem('rememberUser', 'true');
                 }
+                // Redirect students to their dashboard
+                if (userRole === 'student') {
+                    window.location.href = 'student.html';
+                    return;
+                }
+                // For other roles, keep on the page for now
                 alert(`Welcome ${foundUser.firstName}! Login successful.`);
-                // Redirect to user dashboard (you can create this later)
-                // window.location.href = 'user-dashboard.html';
             } else {
                 alert('No account like that is found.');
             }

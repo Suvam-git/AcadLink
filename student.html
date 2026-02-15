@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AcadLink - Student Dashboard</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f7fbff,#eef4ff);min-height:100vh}
+        .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+        .header .left{display:flex;flex-direction:column}
+        .header h1{font-size:20px}
+        .header .meta{opacity:.95}
+        .logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+        .container{max-width:1100px;margin:22px auto;padding:0 18px}
+        .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+        .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(17,24,39,0.06)}
+        .card h2{font-size:18px;margin-bottom:12px;color:#333}
+        .homework-item{border-left:4px solid #667eea;padding:12px;margin-bottom:12px;border-radius:8px}
+        .muted{color:#666;font-size:13px}
+        .points{font-size:28px;font-weight:700;color:#667eea}
+        .ach-list{display:flex;flex-direction:column;gap:8px}
+        .ach{background:#f3f6ff;padding:10px;border-radius:8px}
+        .feeling-buttons{display:flex;gap:8px;flex-wrap:wrap}
+        .feeling-buttons button{padding:10px 12px;border-radius:10px;border:1px solid #e6e9f8;background:#fff;cursor:pointer}
+        .feeling-buttons button.selected{background:#667eea;color:#fff;border-color:#667eea}
+        .feedback-area textarea{width:100%;height:90px;padding:10px;border-radius:8px;border:1px solid #e6e9f8}
+        .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:10px 14px;border-radius:10px;border:none;cursor:pointer}
+        .small{font-size:13px;color:#666}
+        .rank-box{display:flex;gap:12px;align-items:center}
+        .rank-num{background:#fff;border:2px solid #667eea;color:#667eea;padding:10px 14px;border-radius:10px;font-weight:700}
+        @media(max-width:900px){.grid{grid-template-columns:1fr}.header{flex-direction:column;gap:8px}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="left">
+            <h1>Welcome, <span id="studentName">Student</span></h1>
+            <div class="meta small" id="studentMeta">Class • Section</div>
+        </div>
+        <div class="right">
+            <div style="text-align:right">
+                <div class="small">Points</div>
+                <div class="points" id="studentPoints">0</div>
+            </div>
+            <div style="width:12px"></div>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h2>Homeworks</h2>
+                    <div id="homeworksList">
+                        <div class="muted">No homeworks assigned for your class yet.</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:14px">
+                    <h2>Achievements</h2>
+                    <div id="achievementsList" class="ach-list">
+                        <div class="muted">You have no achievements yet. Keep going — you're doing great!</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:14px">
+                    <h2>Daily Emotion Check</h2>
+                    <p class="small" id="feelingNote">Help us understand how you're feeling today — it's private and helps your school support you.</p>
+                    <div id="feelingSection">
+                        <div class="feeling-buttons" id="feelingButtons">
+                            <button data-feeling="Happy">😊 Happy</button>
+                            <button data-feeling="Calm">😌 Calm</button>
+                            <button data-feeling="Okay">🙂 Okay</button>
+                            <button data-feeling="Sad">😢 Sad</button>
+                            <button data-feeling="Anxious">😰 Anxious</button>
+                            <button data-feeling="Excited">🤩 Excited</button>
+                        </div>
+                        <div style="margin-top:12px">
+                            <button class="btn-primary" id="submitFeelingBtn">Submit Feeling</button>
+                        </div>
+                    </div>
+                    <div id="feelingStatus" class="small" style="margin-top:10px;color:green;display:none"></div>
+                </div>
+
+                <div class="card" style="margin-top:14px">
+                    <h2>Feedback (sent to Admin)</h2>
+                    <p class="small">Your feedback will be sent for support. It is handled by the admin; for help with urgent matters, contact your school staff.</p>
+                    <div class="feedback-area">
+                        <textarea id="feedbackText" placeholder="Write your feedback or problem here..."></textarea>
+                        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+                            <button class="btn-primary" id="sendFeedbackBtn">Send Feedback</button>
+                            <div id="feedbackStatus" class="small" style="color:green;display:none">Sent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>Your Performance</h2>
+                    <div style="margin-bottom:12px">
+                        <div class="small">Points</div>
+                        <div class="points" id="sidePoints">0</div>
+                    </div>
+                    <div style="margin-bottom:12px">
+                        <div class="small">Class Rank</div>
+                        <div class="rank-box"><div class="rank-num" id="rankNum">-</div><div class="small" id="rankInfo">out of - students</div></div>
+                    </div>
+                    <div>
+                        <h3 style="font-size:15px;margin-bottom:8px">Kind Notes</h3>
+                        <div class="small">Keep trying — learning is a journey. Celebrate small wins and ask for help when you need it.</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:14px">
+                    <h2>Quick Actions</h2>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <button class="btn-primary" onclick="viewPastFeelings()">View Past Feelings</button>
+                        <button class="btn-primary" onclick="viewAchievements()">View Achievements</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getTodayDate() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        function getCurrentUser() {
+            const u = localStorage.getItem('loggedInUser');
+            return u ? JSON.parse(u) : null;
+        }
+
+        function updateUserInStorage(updatedUser) {
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            // find in students list
+            users.students = users.students.map(s => s.id === updatedUser.id ? updatedUser : s);
+            localStorage.setItem('acadlinkUsers', JSON.stringify(users));
+            localStorage.setItem('loggedInUser', JSON.stringify(updatedUser));
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        function loadDashboard() {
+            const user = getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+
+            document.getElementById('studentName').textContent = user.firstName + ' ' + user.lastName;
+            document.getElementById('studentMeta').textContent = (user.class || '-') + ' • ' + (user.section || '-');
+            document.getElementById('studentPoints').textContent = user.points || 0;
+            document.getElementById('sidePoints').textContent = user.points || 0;
+
+            loadHomeworks(user);
+            renderAchievements(user);
+            renderFeelingState(user);
+            computeRank(user);
+        }
+
+        function loadHomeworks(user) {
+            const homeworks = JSON.parse(localStorage.getItem('acadlinkHomeworks') || '[]');
+            const list = document.getElementById('homeworksList');
+            const relevant = homeworks.filter(h => {
+                if (h.assignedTo === 'all') return true;
+                if (h.class && h.section) return (h.class === user.class && h.section === user.section);
+                return false;
+            });
+            if (relevant.length === 0) {
+                list.innerHTML = '<div class="muted">No homeworks assigned for your class yet.</div>';
+                return;
+            }
+            let html = '';
+            relevant.forEach(h => {
+                html += `<div class="homework-item"><div style="display:flex;justify-content:space-between"><strong>${h.title}</strong><div class="small">Due: ${h.dueDate || '-'}</div></div><div class="muted" style="margin-top:6px">${h.description || ''}</div></div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function renderAchievements(user) {
+            const list = document.getElementById('achievementsList');
+            const arr = user.achievements || [];
+            if (arr.length === 0) {
+                list.innerHTML = '<div class="muted">You have no achievements yet. Keep going — you\'re doing great!</div>';
+                return;
+            }
+            let html = '';
+            arr.forEach(a => { html += `<div class="ach">${a.title} <div class="small">${a.date || ''}</div></div>`; });
+            list.innerHTML = html;
+        }
+
+        // Feelings
+        let selectedFeeling = null;
+        document.getElementById('feelingButtons').addEventListener('click', function(e){
+            if (e.target.tagName === 'BUTTON'){
+                selectedFeeling = e.target.getAttribute('data-feeling');
+                document.querySelectorAll('#feelingButtons button').forEach(b => b.classList.remove('selected'));
+                e.target.classList.add('selected');
+            }
+        });
+
+        document.getElementById('submitFeelingBtn').addEventListener('click', function(){
+            const user = getCurrentUser();
+            if (!selectedFeeling) { alert('Please select how you feel today.'); return; }
+            const today = getTodayDate();
+            // check if already submitted today
+            const existing = (user.feelings || []).find(f => f.date === today);
+            if (existing) { document.getElementById('feelingStatus').style.display='block'; document.getElementById('feelingStatus').textContent = 'You have already submitted your feeling for today.'; return; }
+            const entry = { date: today, feeling: selectedFeeling };
+            user.feelings = user.feelings || [];
+            user.feelings.push(entry);
+            // update storage
+            updateUserInStorage(user);
+
+            // also add to global feedback array if needed (not necessary). Admin reads from user.feelings.
+            document.getElementById('feelingStatus').style.display='block';
+            document.getElementById('feelingStatus').textContent = 'Thanks for sharing — your feeling was recorded.';
+            setTimeout(()=>{ document.getElementById('feelingStatus').style.display='none'; },3000);
+        });
+
+        function renderFeelingState(user) {
+            const today = getTodayDate();
+            const existing = (user.feelings || []).find(f => f.date === today);
+            if (existing) {
+                document.getElementById('feelingStatus').style.display='block';
+                document.getElementById('feelingStatus').textContent = 'You submitted: ' + existing.feeling + ' today.';
+                // highlight selected
+                document.querySelectorAll('#feelingButtons button').forEach(b => {
+                    if (b.getAttribute('data-feeling') === existing.feeling) b.classList.add('selected');
+                });
+            }
+        }
+
+        // Feedback
+        document.getElementById('sendFeedbackBtn').addEventListener('click', function(){
+            const msg = document.getElementById('feedbackText').value.trim();
+            if (!msg) { alert('Please enter a message to send.'); return; }
+            const user = getCurrentUser();
+            const store = JSON.parse(localStorage.getItem('acadlinkFeedbacks') || '[]');
+            const entry = { id: Date.now(), studentId: user.id, studentName: user.firstName + ' ' + user.lastName, date: new Date().toISOString(), message: msg };
+            store.push(entry);
+            localStorage.setItem('acadlinkFeedbacks', JSON.stringify(store));
+            document.getElementById('feedbackText').value = '';
+            document.getElementById('feedbackStatus').style.display='block';
+            setTimeout(()=>{ document.getElementById('feedbackStatus').style.display='none'; },2500);
+        });
+
+        function computeRank(user) {
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const students = users.students.filter(s => (s.class||'') === (user.class||'') && (s.section||'') === (user.section||''));
+            if (students.length === 0) { document.getElementById('rankNum').textContent='-'; document.getElementById('rankInfo').textContent='out of 0 students'; return; }
+            students.sort((a,b)=> (b.points||0) - (a.points||0));
+            const idx = students.findIndex(s => s.id === user.id);
+            if (idx === -1) { document.getElementById('rankNum').textContent='-'; document.getElementById('rankInfo').textContent=`out of ${students.length} students`; return; }
+            document.getElementById('rankNum').textContent = (idx+1);
+            document.getElementById('rankInfo').textContent = `out of ${students.length} students`;
+        }
+
+        // Helpers to view
+        function viewPastFeelings(){
+            const user = getCurrentUser();
+            const arr = user.feelings || [];
+            if (arr.length===0) { alert('No past feelings recorded'); return; }
+            let txt = 'Past feelings:\n';
+            arr.slice().reverse().forEach(f=> txt += `${f.date}: ${f.feeling}\n`);
+            alert(txt);
+        }
+        function viewAchievements(){
+            const user = getCurrentUser();
+            const arr = user.achievements || [];
+            if (arr.length===0) { alert('No achievements yet.'); return; }
+            let txt = 'Achievements:\n';
+            arr.slice().reverse().forEach(a=> txt += `${a.date||''}: ${a.title}\n`);
+            alert(txt);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

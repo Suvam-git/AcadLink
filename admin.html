@@ -454,6 +454,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="className">Class</label>
+                        <input type="text" id="className" name="className" placeholder="e.g., Grade 8">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="section">Section</label>
+                        <input type="text" id="section" name="section" placeholder="e.g., A">
+                    </div>
+
+                    <div class="form-group">
                         <label for="firstName">First Name</label>
                         <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required>
                     </div>
@@ -592,6 +602,15 @@
                 };
                 localStorage.setItem('acadlinkUsers', JSON.stringify(defaultUsers));
             }
+            // Ensure homeworks and feedback storage exist
+            if (!localStorage.getItem('acadlinkHomeworks')) {
+                const defaultHomeworks = [];
+                localStorage.setItem('acadlinkHomeworks', JSON.stringify(defaultHomeworks));
+            }
+
+            if (!localStorage.getItem('acadlinkFeedbacks')) {
+                localStorage.setItem('acadlinkFeedbacks', JSON.stringify([]));
+            }
         }
 
         // Add User
@@ -599,6 +618,8 @@
             event.preventDefault();
 
             const userRole = document.getElementById('userRole').value;
+            const className = document.getElementById('className').value || '';
+            const section = document.getElementById('section').value || '';
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
             const email = document.getElementById('email').value;
@@ -609,6 +630,11 @@
             // Create user object
             const newUser = {
                 id: Date.now(),
+                class: className,
+                section: section,
+                points: 0,
+                achievements: [],
+                feelings: [],
                 firstName,
                 lastName,
                 email,
@@ -673,6 +699,77 @@
 
             // Update parent display
             displayRoleUsers('parents', 'parentsList', 'parentTableBody', 'parentBadge', 'parentCount');
+
+            // Also refresh admin views for feelings and feedbacks
+            displayAllFeelings();
+            displayAllFeedbacks();
+        }
+
+        // Display aggregated feelings submitted by students
+        function displayAllFeelings() {
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers'));
+            const students = users.students;
+            // create a simple panel showing recent feelings
+            let panel = '<div class="role-card"><div class="role-header"><h3>Student Feelings</h3></div><div style="padding:15px;">';
+            const entries = [];
+            students.forEach(s => {
+                if (Array.isArray(s.feelings)) {
+                    s.feelings.forEach(f => {
+                        entries.push({ studentName: s.firstName + ' ' + s.lastName, class: s.class || '-', section: s.section || '-', date: f.date, feeling: f.feeling });
+                    });
+                }
+            });
+
+            if (entries.length === 0) {
+                panel += '<div class="empty-state"><p>No feelings reported yet.</p></div>';
+            } else {
+                // sort by date desc
+                entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+                panel += '<table class="users-table"><thead><tr><th>Student</th><th>Class</th><th>Section</th><th>Date</th><th>Feeling</th></tr></thead><tbody>';
+                entries.forEach(e => {
+                    panel += `<tr><td class="user-name">${e.studentName}</td><td>${e.class}</td><td>${e.section}</td><td>${e.date}</td><td>${e.feeling}</td></tr>`;
+                });
+                panel += '</tbody></table>';
+            }
+
+            panel += '</div></div>';
+
+            // append or replace a container
+            const containerId = 'feelingsAdminPanel';
+            let container = document.getElementById(containerId);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = containerId;
+                document.querySelector('.container').appendChild(container);
+            }
+            container.innerHTML = panel;
+        }
+
+        // Display feedbacks sent by students (admin sees student name)
+        function displayAllFeedbacks() {
+            const feedbacks = JSON.parse(localStorage.getItem('acadlinkFeedbacks') || '[]');
+            let panel = '<div class="role-card"><div class="role-header"><h3>Student Feedbacks</h3></div><div style="padding:15px;">';
+
+            if (feedbacks.length === 0) {
+                panel += '<div class="empty-state"><p>No feedback submitted yet.</p></div>';
+            } else {
+                panel += '<table class="users-table"><thead><tr><th>Student</th><th>Date</th><th>Message</th></tr></thead><tbody>';
+                feedbacks.slice().reverse().forEach(f => {
+                    panel += `<tr><td class="user-name">${f.studentName}</td><td>${f.date}</td><td>${f.message}</td></tr>`;
+                });
+                panel += '</tbody></table>';
+            }
+
+            panel += '</div></div>';
+
+            const containerId = 'feedbacksAdminPanel';
+            let container = document.getElementById(containerId);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = containerId;
+                document.querySelector('.container').appendChild(container);
+            }
+            container.innerHTML = panel;
         }
 
         function displayRoleUsers(roleKey, listContainerId, tableBodyId, badgeId, countId) {
@@ -701,9 +798,12 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Class</th>
+                                <th>Section</th>
                                 <th>Email</th>
                                 <th>Username</th>
                                 <th>Phone</th>
+                                <th>Points</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -714,13 +814,14 @@
                     tableHTML += `
                         <tr>
                             <td class="user-name">${user.firstName} ${user.lastName}</td>
+                            <td>${user.class || '-'}</td>
+                            <td>${user.section || '-'}</td>
                             <td class="user-email">${user.email}</td>
                             <td>${user.username}</td>
                             <td>${user.phone || '-'}</td>
+                            <td>${user.points || 0}</td>
                             <td>
-                                <button class="delete-btn" onclick="deleteUser('${roleKey.slice(0, -1)}', ${user.id})">
-                                    🗑️ Delete
-                                </button>
+                                <button class="delete-btn" onclick="deleteUser('${roleKey.slice(0, -1)}', ${user.id})">🗑️ Delete</button>
                             </td>
                         </tr>
                     `;
