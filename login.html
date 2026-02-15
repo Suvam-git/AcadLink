@@ -520,6 +520,11 @@
                     window.location.href = 'student.html';
                     return;
                 }
+                // Redirect teachers to teacher dashboard
+                if (userRole === 'teacher') {
+                    window.location.href = 'teacher.html';
+                    return;
+                }
                 // For other roles, keep on the page for now
                 alert(`Welcome ${foundUser.firstName}! Login successful.`);
             } else {
