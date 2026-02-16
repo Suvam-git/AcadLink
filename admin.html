@@ -445,7 +445,7 @@
                 <form id="addUserForm" onsubmit="addUser(event)">
                     <div class="form-group">
                         <label for="userRole">Role</label>
-                        <select id="userRole" name="userRole" required>
+                        <select id="userRole" name="userRole" required onchange="onRoleChange()">
                             <option value="">Select Role</option>
                             <option value="student">Student</option>
                             <option value="teacher">Teacher</option>
@@ -463,6 +463,11 @@
                         <input type="text" id="section" name="section" placeholder="e.g., A">
                     </div>
 
+                    <div class="form-group" id="rollNoGroup" style="display:none">
+                        <label for="rollNo">Roll Number</label>
+                        <input type="text" id="rollNo" name="rollNo" placeholder="e.g., 2026-045">
+                    </div>
+
                     <div class="form-group">
                         <label for="firstName">First Name</label>
                         <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required>
@@ -475,7 +480,7 @@
 
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="Enter email address" required>
+                        <input type="email" id="email" name="email" placeholder="Enter email address">
                     </div>
 
                     <div class="form-group">
@@ -611,6 +616,7 @@
             const userRole = document.getElementById('userRole').value;
             const className = document.getElementById('className').value || '';
             const section = document.getElementById('section').value || '';
+            const rollNo = (document.getElementById('rollNo') && document.getElementById('rollNo').value) ? document.getElementById('rollNo').value.trim() : '';
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
             const email = document.getElementById('email').value;
@@ -623,6 +629,7 @@
                 id: Date.now(),
                 class: className,
                 section: section,
+                rollNo: rollNo,
                 points: 0,
                 achievements: [],
                 feelings: [],
@@ -633,6 +640,12 @@
                 username,
                 password
             };
+
+            // Validate required roll number for students
+            if (userRole === 'student' && (!rollNo || rollNo.length === 0)) {
+                showErrorMessage('Roll number is required when adding a student.');
+                return;
+            }
 
             // Get existing data
             const users = JSON.parse(localStorage.getItem('acadlinkUsers'));
@@ -696,7 +709,6 @@
             const users = JSON.parse(localStorage.getItem('acadlinkUsers'));
             const roleUsers = users[roleKey];
             const container = document.getElementById(listContainerId);
-            const tableBody = document.getElementById(tableBodyId);
             const badge = document.getElementById(badgeId);
             const countBadge = document.getElementById(countId);
 
@@ -712,14 +724,16 @@
                         <p>No ${roleKey} added yet. Add your first ${roleKey.slice(0, -1)}!</p>
                     </div>
                 `;
-            } else {
+                return;
+            }
+
+            // Different columns for teachers (admin should not manage class/section for teachers)
+            if (roleKey === 'teachers') {
                 let tableHTML = `
                     <table class="users-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Class</th>
-                                <th>Section</th>
                                 <th>Email</th>
                                 <th>Username</th>
                                 <th>Phone</th>
@@ -734,14 +748,12 @@
                     tableHTML += `
                         <tr>
                             <td class="user-name">${user.firstName} ${user.lastName}</td>
-                            <td>${user.class || '-'}</td>
-                            <td>${user.section || '-'}</td>
                             <td class="user-email">${user.email}</td>
                             <td>${user.username}</td>
                             <td>${user.phone || '-'}</td>
                             <td>${user.points || 0}</td>
                             <td>
-                                <button class="delete-btn" onclick="deleteUser('${roleKey.slice(0, -1)}', ${user.id})">🗑️ Delete</button>
+                                <button class="delete-btn" onclick="deleteUser('teacher', ${user.id})">🗑️ Delete</button>
                             </td>
                         </tr>
                     `;
@@ -753,6 +765,120 @@
                 `;
 
                 container.innerHTML = tableHTML;
+                return;
+            }
+
+            // Students table (show roll number, class & section)
+            if (roleKey === 'students') {
+                let tableHTML = `
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Roll No</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Username</th>
+                                <th>Phone</th>
+                                <th>Points</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                roleUsers.forEach(user => {
+                    tableHTML += `
+                        <tr>
+                            <td class="user-name">${user.firstName} ${user.lastName}</td>
+                            <td>${user.rollNo || '-'}</td>
+                            <td>${user.class || '-'}</td>
+                            <td>${user.section || '-'}</td>
+                            <td>${user.username}</td>
+                            <td>${user.phone || '-'}</td>
+                            <td>${user.points || 0}</td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteUser('student', ${user.id})">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = tableHTML;
+                return;
+            }
+
+            // Parents table (do not include class/section)
+            if (roleKey === 'parents') {
+                let tableHTML = `
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Username</th>
+                                <th>Phone</th>
+                                <th>Points</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                roleUsers.forEach(user => {
+                    tableHTML += `
+                        <tr>
+                            <td class="user-name">${user.firstName} ${user.lastName}</td>
+                            <td class="user-email">${user.email}</td>
+                            <td>${user.username}</td>
+                            <td>${user.phone || '-'}</td>
+                            <td>${user.points || 0}</td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteUser('parent', ${user.id})">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = tableHTML;
+                return;
+            }
+        }
+
+        // Hide class/section when adding teachers via admin
+        function onRoleChange() {
+            const role = document.getElementById('userRole').value;
+            const classGroup = document.getElementById('className').parentElement;
+            const sectionGroup = document.getElementById('section').parentElement;
+            const rollGroup = document.getElementById('rollNoGroup');
+            const emailGroup = document.getElementById('email').parentElement;
+
+            // Hide class/section for teachers and parents. Show for students.
+            if (role === 'teacher' || role === 'parent') {
+                classGroup.style.display = 'none';
+                sectionGroup.style.display = 'none';
+            } else {
+                classGroup.style.display = '';
+                sectionGroup.style.display = '';
+            }
+
+            // Show roll number input only when adding a student
+            if (role === 'student') {
+                if (rollGroup) rollGroup.style.display = '';
+                if (emailGroup) { emailGroup.style.display = 'none'; document.getElementById('email').value = ''; }
+            } else {
+                if (rollGroup) rollGroup.style.display = 'none';
+                if (emailGroup) emailGroup.style.display = '';
             }
         }
 

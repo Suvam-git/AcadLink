@@ -525,6 +525,11 @@
                     window.location.href = 'teacher.html';
                     return;
                 }
+                // Redirect parents to parent dashboard
+                if (userRole === 'parent') {
+                    window.location.href = 'parent.html';
+                    return;
+                }
                 // For other roles, keep on the page for now
                 alert(`Welcome ${foundUser.firstName}! Login successful.`);
             } else {

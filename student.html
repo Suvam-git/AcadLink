@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>AcadLink - Student Dashboard</title>
     <style>
+        /* Modal styles for daily emotion check */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #fff; padding: 22px; border-radius: 12px; width: 420px; max-width: 92%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-bottom: 8px; color: #333; }
+        .modal-feelings { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+        .modal-feelings button{ padding:10px 12px; border-radius:10px; border:1px solid #e6e9f8; background:#fff; cursor:pointer }
+        .modal-feelings button.selected{ background:#667eea; color:#fff; border-color:#667eea }
         *{box-sizing:border-box;margin:0;padding:0}
         body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f7fbff,#eef4ff);min-height:100vh}
         .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
@@ -36,20 +44,48 @@
     <div class="header">
         <div class="left">
             <h1>Welcome, <span id="studentName">Student</span></h1>
-            <div class="meta small" id="studentMeta">Class • Section</div>
+            <div class="meta small" id="studentMeta" style="color: white;">Class • Section</div>
         </div>
         <div class="right">
             <div style="text-align:right">
-                <div class="small">Points</div>
-                <div class="points" id="studentPoints">0</div>
+                <div class="small" style="color: white;">Points</div>
+                <div class="points" style="color: white;" id="studentPoints">0</div>
             </div>
             <div style="width:12px"></div>
             <div style="text-align:right">
-                <div class="small">Streak</div>
-                <div class="small" id="streakDisplay">0 days</div>
+                <div class="small" style="color: white;">Streak</div>
+                <div class="small" id="streakDisplay" style="color: wheat;">0 days</div>
             </div>
             <div style="width:12px"></div>
             <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Mandatory Daily Emotion Modal (blocks until submitted) -->
+    <div id="feelingModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <h3>How are you feeling today?</h3>
+            <p class="small">This helps your school support you. Please select one to continue.</p>
+            <div class="modal-feelings" id="modalFeelingButtons">
+                <button data-feeling="Happy">😊 Happy</button>
+                <button data-feeling="Calm">😌 Calm</button>
+                <button data-feeling="Okay">🙂 Okay</button>
+                <button data-feeling="Sad">😢 Sad</button>
+                <button data-feeling="Anxious">😰 Anxious</button>
+                <button data-feeling="Excited">🤩 Excited</button>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+                <button class="btn-primary" id="modalSubmitFeeling">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat Sidebar Placeholder -->
+    <div id="aiSidebar" style="position:fixed;right:18px;bottom:18px;z-index:1200;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <button id="aiToggle" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:0 8px 20px rgba(102,126,234,0.2)">AI Chat</button>
+        <div id="aiPanel" style="width:360px;max-width:86vw;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);overflow:hidden;display:none">
+            <div style="padding:12px;border-bottom:1px solid #eee;background:#fafafa;font-weight:600">Assistant</div>
+            <div style="padding:14px;color:#666">This is a placeholder for the AI assistant. AI can be added to make it expandable.</div>
         </div>
     </div>
 
@@ -67,6 +103,13 @@
                     <h2>Achievements</h2>
                     <div id="achievementsList" class="ach-list">
                         <div class="muted">You have no achievements yet. Keep going — you're doing great!</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:14px" id="parentRequestsCard">
+                    <h2>🧑‍👩‍👧 Parent Requests</h2>
+                    <div id="parentRequestsList">
+                        <div class="muted">No parent requests at the moment.</div>
                     </div>
                 </div>
 
@@ -137,8 +180,33 @@
         }
 
         function getCurrentUser() {
-            const u = localStorage.getItem('loggedInUser');
-            return u ? JSON.parse(u) : null;
+            const raw = localStorage.getItem('loggedInUser');
+            if (!raw) return null;
+            try {
+                const parsed = JSON.parse(raw);
+                // If parsed is an object with id, prefer the authoritative entry from acadlinkUsers
+                const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+                const maybeId = parsed && (parsed.id || parsed.studentId || parsed.userId);
+                if (maybeId) {
+                    const fresh = users.students.find(s => String(s.id) === String(maybeId));
+                    if (fresh) {
+                        // refresh the stored loggedInUser so student sees latest data
+                        localStorage.setItem('loggedInUser', JSON.stringify(fresh));
+                        return fresh;
+                    }
+                }
+                // fallback: try to match by email/username
+                if (parsed && parsed.email) {
+                    const fresh = users.students.find(s => s.email === parsed.email) || users.teachers.find(t => t.email === parsed.email) || users.parents.find(p => p.email === parsed.email);
+                    if (fresh) {
+                        localStorage.setItem('loggedInUser', JSON.stringify(fresh));
+                        return fresh;
+                    }
+                }
+                return parsed;
+            } catch (err) {
+                return null;
+            }
         }
 
         function updateUserInStorage(updatedUser) {
@@ -167,24 +235,25 @@
             loadHomeworks(user);
             renderAchievements(user);
             renderFeelingState(user);
+            renderParentRequests(user);
             computeRank(user);
+            // If student hasn't submitted today's feeling, force modal
+            showFeelingModalIfNeeded(user);
         }
 
         function loadHomeworks(user) {
-            const homeworks = JSON.parse(localStorage.getItem('acadlinkHomeworks') || '[]');
+            // Prefer per-student homeworks stored on the user object (teachers add there).
             const list = document.getElementById('homeworksList');
-            const relevant = homeworks.filter(h => {
-                if (h.assignedTo === 'all') return true;
-                if (h.class && h.section) return (h.class === user.class && h.section === user.section);
-                return false;
-            });
-            if (relevant.length === 0) {
+            const relevant = (user.homeworks || []).slice().reverse();
+            if (!relevant || relevant.length === 0) {
                 list.innerHTML = '<div class="muted">No homeworks assigned for your class yet.</div>';
                 return;
             }
             let html = '';
             relevant.forEach(h => {
-                html += `<div class="homework-item"><div style="display:flex;justify-content:space-between"><strong>${h.title}</strong><div class="small">Due: ${h.dueDate || '-'}</div></div><div class="muted" style="margin-top:6px">${h.description || ''}</div></div>`;
+                const title = h.title || h.name || h.heading || h.subject || 'Untitled Assignment';
+                const status = h.completed ? '<span class="small" style="color:green">✓ Completed</span>' : '<span class="small" style="color:#ff9900">⏳ Pending</span>';
+                html += `<div class="homework-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${title}</strong><div class="muted" style="margin-top:6px">${h.description || ''}</div></div><div style="text-align:right">${status}<div class="small">Due: ${h.dueDate || '-'}</div></div></div></div>`;
             });
             list.innerHTML = html;
         }
@@ -243,6 +312,121 @@
             }
         }
 
+        // Parent requests: render pending requests and allow acceptance
+        function renderParentRequests(user) {
+            const list = document.getElementById('parentRequestsList');
+            const requests = user.parentRequests || [];
+            if (!requests || requests.length === 0) {
+                list.innerHTML = '<div class="muted">No parent requests at the moment.</div>';
+                return;
+            }
+            let html = '';
+            requests.forEach(req => {
+                if (req.status === 'pending') {
+                    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f2f7"><div><strong>${req.parentName}</strong><div class="small">Requested on ${req.date || ''}</div></div><div><button class="btn-primary" onclick="acceptParentRequest(${req.parentId})">Accept</button></div></div>`;
+                }
+            });
+            list.innerHTML = html || '<div class="muted">No parent requests at the moment.</div>';
+        }
+
+        function acceptParentRequest(parentId) {
+            const user = getCurrentUser();
+            if (!user) return;
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const parent = users.parents.find(p => String(p.id) === String(parentId));
+            if (!parent) { alert('Parent not found.'); return; }
+
+            // Add parent id to student's parents list
+            user.parents = user.parents || [];
+            if (!user.parents.find(p => String(p) === String(parentId))) user.parents.push(parentId);
+
+            // Mark request as accepted
+            user.parentRequests = (user.parentRequests || []).map(r => r.parentId === parentId ? Object.assign({}, r, { status: 'accepted' }) : r);
+
+            // Add student to parent's wards
+            parent.wards = parent.wards || [];
+            if (!parent.wards.find(w => String(w) === String(user.id))) parent.wards.push(user.id);
+
+            // Persist both
+            // update users.students entry
+            users.students = users.students.map(s => s.id === user.id ? user : s);
+            users.parents = users.parents.map(p => p.id === parent.id ? parent : p);
+            localStorage.setItem('acadlinkUsers', JSON.stringify(users));
+
+            // refresh local loggedInUser for student
+            localStorage.setItem('loggedInUser', JSON.stringify(user));
+
+            showTemporaryMessage('Parent connection accepted.');
+            renderParentRequests(user);
+        }
+
+        function showTemporaryMessage(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.position = 'fixed';
+            el.style.bottom = '18px';
+            el.style.left = '18px';
+            el.style.background = '#10b981';
+            el.style.color = 'white';
+            el.style.padding = '10px 14px';
+            el.style.borderRadius = '8px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        // Modal: mandatory daily emotion
+        let modalSelectedFeeling = null;
+        document.addEventListener('click', function(e){
+            // modal buttons
+            const mb = document.getElementById('modalFeelingButtons');
+            if (mb && mb.contains(e.target) && e.target.tagName === 'BUTTON') {
+                modalSelectedFeeling = e.target.getAttribute('data-feeling');
+                mb.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+                e.target.classList.add('selected');
+            }
+        });
+
+        document.getElementById('modalSubmitFeeling').addEventListener('click', function(){
+            const user = getCurrentUser();
+            if (!modalSelectedFeeling) { alert('Please select how you feel today.'); return; }
+            const today = getTodayDate();
+            const existing = (user.feelings || []).find(f => f.date === today);
+            if (existing) {
+                hideFeelingModal();
+                return;
+            }
+            const entry = { date: today, feeling: modalSelectedFeeling };
+            user.feelings = user.feelings || [];
+            user.feelings.push(entry);
+            updateUserInStorage(user);
+            // reflect on-page
+            document.getElementById('feelingStatus').style.display='block';
+            document.getElementById('feelingStatus').textContent = 'You submitted: ' + modalSelectedFeeling + ' today.';
+            // highlight on-page buttons as well
+            document.querySelectorAll('#feelingButtons button').forEach(b => {
+                if (b.getAttribute('data-feeling') === modalSelectedFeeling) b.classList.add('selected'); else b.classList.remove('selected');
+            });
+            hideFeelingModal();
+        });
+
+        function showFeelingModalIfNeeded(user) {
+            const today = getTodayDate();
+            const existing = (user.feelings || []).find(f => f.date === today);
+            if (!existing) {
+                document.getElementById('feelingModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+                // reset modal selection
+                modalSelectedFeeling = null;
+                const mb = document.getElementById('modalFeelingButtons');
+                if (mb) mb.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+            }
+        }
+
+        function hideFeelingModal() {
+            document.getElementById('feelingModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
         // Feedback
         document.getElementById('sendFeedbackBtn').addEventListener('click', function(){
             const msg = document.getElementById('feedbackText').value.trim();
@@ -285,6 +469,12 @@
             arr.slice().reverse().forEach(a=> txt += `${a.date||''}: ${a.title}\n`);
             alert(txt);
         }
+
+        // AI sidebar toggle behavior
+        document.getElementById('aiToggle').addEventListener('click', function(){
+            const p = document.getElementById('aiPanel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', loadDashboard);

@@ -489,6 +489,28 @@
             margin-bottom: 20px;
         }
 
+        .progress-container {
+            background: #f3f6ff;
+            padding: 14px;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e6e9f8;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 300ms ease;
+        }
+
         .load-stat {
             background: #f9fafb;
             padding: 15px;
@@ -608,56 +630,44 @@
     <div class="container">
         <!-- Notifications & Activity Status -->
         <div class="notifications-section">
-            <!-- Low Load Notification -->
-            <div id="lowLoadNotif" class="notification-card low-load" style="display: none;">
-                <div class="notification-icon">⚠️</div>
+            <!-- Class Load Notification -->
+            <!-- Teacher Inactivity (supportive) -->
+            <div id="teacherInactiveNotif" class="notification-card inactive" style="display: none;">
+                <div class="notification-icon">🤝</div>
                 <div class="notification-content">
-                    <h3>Low Class Activity</h3>
-                    <p id="lowLoadMsg">The class hasn't been active in the last 2 hours. Consider engaging students with assignments.</p>
-                    <button class="notification-action" onclick="engageStudents()">Create Assignment</button>
+                    <h3>We Missed You — Gentle Reminder</h3>
+                    <p id="teacherInactiveMsg">It’s been a couple of days since your last login. A short check‑in or quick assignment helps students stay on track. Need a suggested activity?</p>
+                    <button class="notification-action" onclick="openQuickComposer()">Create Quick Activity</button>
                 </div>
             </div>
 
-            <!-- Your Inactive Status -->
-            <div id="inactiveNotif" class="notification-card inactive" style="display: none;">
-                <div class="notification-icon">😴</div>
-                <div class="notification-content">
-                    <h3>You've Been Inactive</h3>
-                    <p id="inactiveMsg">It's been 1 hour since your last activity. Your students need your guidance!</p>
-                    <button class="notification-action" onclick="markActive()">Mark Active Now</button>
-                </div>
-            </div>
-
-            <!-- Activity Check-in -->
-            <div class="notification-card success">
-                <div class="notification-icon">✅</div>
-                <div class="notification-content">
-                    <h3>Daily Check-in</h3>
-                    <p>Stay active to help your students learn better. Check in now to let them know you're available.</p>
-                    <button class="notification-action" onclick="checkInNow()">Check In</button>
-                </div>
-            </div>
+            <!-- Student Engagement -->
+            <!-- (Removed class-load and student support notifications as requested) -->
         </div>
 
         <!-- Load Status Overview -->
-        <div class="section-title">📊 Class Activity Overview</div>
+        <div class="section-title">📊 Class Overview</div>
         <div class="load-status">
             <div class="load-stat high">
-                <div class="load-stat-number" id="activeCount">18</div>
-                <div class="load-stat-label">Students Active</div>
+                <div class="load-stat-number" id="activeCount">0</div>
+                <div class="load-stat-label">Students Active (24h)</div>
             </div>
+
             <div class="load-stat medium">
-                <div class="load-stat-number" id="ongoingCount">5</div>
-                <div class="load-stat-label">Ongoing Assignments</div>
+                <div class="load-stat-number" id="ongoingCount">0</div>
+                <div class="load-stat-label">Assignments (7d)</div>
             </div>
+
             <div class="load-stat low">
-                <div class="load-stat-number" id="needHelpCount">3</div>
-                <div class="load-stat-label">Need Help</div>
+                <div class="load-stat-number" id="needHelpCount">0</div>
+                <div class="load-stat-label">Students Needing Support</div>
             </div>
         </div>
 
+        <!-- Workload dashboard removed per request; assignments panel added in sidebar -->
+
         <!-- Main Content Grid -->
-        <div class="main-grid">
+        <div class="main-grid" style="grid-template-columns: 1fr 1fr 340px;">
             <!-- Priority & Content Difficulty -->
             <div class="card">
                 <h2>📝 Set Priority & Content Load</h2>
@@ -675,6 +685,11 @@
                             <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">🔴 Hard</button>
                         </div>
                         <input type="hidden" id="selectedDifficulty" value="">
+                    </div>
+
+                    <div class="priority-input-group">
+                        <label>Live Preview</label>
+                        <div id="composerPreview" style="background:#f8f9ff;padding:10px;border-radius:8px;color:#333;font-size:14px;">No draft yet. Enter details to see impact on weekly load.</div>
                     </div>
 
                     <div class="priority-input-group">
@@ -700,69 +715,86 @@
                 <h2>📊 Add Practical Marks</h2>
                 <div class="marks-form">
                     <div class="marks-input-group">
-                        <select id="studentSelect" placeholder="Select Student">
-                            <option value="">-- Select Student --</option>
-                            <option value="student1">Aarav Kumar</option>
-                            <option value="student2">Bhavna Singh</option>
-                            <option value="student3">Chirag Patel</option>
-                            <option value="student4">Divya Sharma</option>
-                            <option value="student5">Eshaan Gupta</option>
-                        </select>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="studentSelect" placeholder="Select Student">
+                                <option value="">-- Select Student --</option>
+                            </select>
+                            <input id="studentSearch" type="text" placeholder="Search students" style="padding:8px;border:2px solid #e6e9f8;border-radius:8px;font-size:14px;"> 
+                        </div>
                         <input type="number" id="marksInput" placeholder="Marks (0-100)" min="0" max="100">
                         <button class="btn-primary" onclick="addMarks()">Add Marks</button>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <label style="font-weight:600;color:#333;">Sort:</label>
+                            <select id="studentSort">
+                                <option value="name">Name</option>
+                                <option value="marks">Marks</option>
+                                <option value="streak">Streak</option>
+                            </select>
+                        </div>
+                        <div style="font-size:13px;color:#666;">Filter applies to displayed class</div>
                     </div>
 
                     <div class="student-list" id="studentMarks">
                         <div class="student-item">
                             <span class="student-name">Aarav Kumar</span>
                             <span class="marks-display">85/100</span>
-                            <div class="streak-display">
-                                <span class="streak-fire">🔥</span>
-                                <span>7 days</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <input data-student-id="student1" class="inline-mark-input" type="number" value="85" min="0" max="100" style="width:72px;padding:6px;border:1px solid #e6e9f8;border-radius:6px;text-align:center;"> 
+                                <button class="edit-marks-btn" onclick="viewStudentMarks('student1')">View</button>
                             </div>
-                            <button class="edit-marks-btn" onclick="editMarkModal('student1', 'Aarav Kumar', 85, 7)">Edit</button>
                         </div>
 
                         <div class="student-item">
                             <span class="student-name">Bhavna Singh</span>
                             <span class="marks-display">92/100</span>
-                            <div class="streak-display">
-                                <span class="streak-fire">🔥</span>
-                                <span>12 days</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <input data-student-id="student2" class="inline-mark-input" type="number" value="92" min="0" max="100" style="width:72px;padding:6px;border:1px solid #e6e9f8;border-radius:6px;text-align:center;"> 
+                                <button class="edit-marks-btn" onclick="viewStudentMarks('student2')">View</button>
                             </div>
-                            <button class="edit-marks-btn" onclick="editMarkModal('student2', 'Bhavna Singh', 92, 12)">Edit</button>
                         </div>
 
                         <div class="student-item">
                             <span class="student-name">Chirag Patel</span>
                             <span class="marks-display">78/100</span>
-                            <div class="streak-display">
-                                <span class="streak-fire">🔥</span>
-                                <span>3 days</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <input data-student-id="student3" class="inline-mark-input" type="number" value="78" min="0" max="100" style="width:72px;padding:6px;border:1px solid #e6e9f8;border-radius:6px;text-align:center;"> 
+                                <button class="edit-marks-btn" onclick="viewStudentMarks('student3')">View</button>
                             </div>
-                            <button class="edit-marks-btn" onclick="editMarkModal('student3', 'Chirag Patel', 78, 3)">Edit</button>
                         </div>
 
                         <div class="student-item">
                             <span class="student-name">Divya Sharma</span>
                             <span class="marks-display">88/100</span>
-                            <div class="streak-display">
-                                <span class="streak-fire">🔥</span>
-                                <span>9 days</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <input data-student-id="student4" class="inline-mark-input" type="number" value="88" min="0" max="100" style="width:72px;padding:6px;border:1px solid #e6e9f8;border-radius:6px;text-align:center;"> 
+                                <button class="edit-marks-btn" onclick="viewStudentMarks('student4')">View</button>
                             </div>
-                            <button class="edit-marks-btn" onclick="editMarkModal('student4', 'Divya Sharma', 88, 9)">Edit</button>
                         </div>
 
                         <div class="student-item">
                             <span class="student-name">Eshaan Gupta</span>
                             <span class="marks-display">95/100</span>
-                            <div class="streak-display">
-                                <span class="streak-fire">🔥</span>
-                                <span>15 days</span>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <input data-student-id="student5" class="inline-mark-input" type="number" value="95" min="0" max="100" style="width:72px;padding:6px;border:1px solid #e6e9f8;border-radius:6px;text-align:center;"> 
+                                <button class="edit-marks-btn" onclick="viewStudentMarks('student5')">View</button>
                             </div>
-                            <button class="edit-marks-btn" onclick="editMarkModal('student5', 'Eshaan Gupta', 95, 15)">Edit</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Assignments / Details Sidebar -->
+            <div class="card" id="assignmentsPanel">
+                <h2>Details</h2>
+                <div id="assignmentsList" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="color:#666;font-size:13px;">No assignments yet for your selected sections.</div>
+                </div>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                    <button class="btn-primary" onclick="exportAssignments()">Export JSON</button>
+                    <button class="btn-primary" onclick="importAssignments()">Import</button>
                 </div>
             </div>
         </div>
@@ -777,7 +809,7 @@
                         <th>Last Active</th>
                         <th>Status</th>
                         <th>Assignments Done</th>
-                        <th>Streak</th>
+                        <th>Marks</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -831,7 +863,7 @@
     <div id="editMarksModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Edit Student Marks & Streak</h3>
+                <h3>Edit Student Marks</h3>
                 <button class="close-btn" onclick="closeModal('editMarksModal')">&times;</button>
             </div>
             <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -843,103 +875,364 @@
                     <label style="font-weight: 600; display: block; margin-bottom: 8px;">Practical Marks (0-100)</label>
                     <input type="number" id="modalMarks" min="0" max="100" style="padding: 10px 12px; border: 2px solid #e6e9f8; border-radius: 8px; width: 100%;">
                 </div>
-                <div>
-                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Streak (Days)</label>
-                    <input type="number" id="modalStreak" min="0" style="padding: 10px 12px; border: 2px solid #e6e9f8; border-radius: 8px; width: 100%;">
-                </div>
-                <p style="font-size: 13px; color: #666; background: #f3f6ff; padding: 10px; border-radius: 6px;">💡 The streak increases daily engagement. It motivates students to participate consistently!</p>
                 <button class="btn-primary" onclick="saveMarkChanges()">Save Changes</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Teacher Data
-        let teacherData = {
-            name: 'Mr. Sharma',
-            class: 'Class 10-A',
-            lastActive: Date.now(),
-            isActive: true,
-            priority: {
-                topic: '',
-                difficulty: '',
-                duration: 0
-            },
-            students: {
-                student1: { name: 'Aarav Kumar', marks: 85, streak: 7, lastActive: Date.now() - 5 * 60000 },
-                student2: { name: 'Bhavna Singh', marks: 92, streak: 12, lastActive: Date.now() - 12 * 60000 },
-                student3: { name: 'Chirag Patel', marks: 78, streak: 3, lastActive: Date.now() - 2 * 3600000 },
-                student4: { name: 'Divya Sharma', marks: 88, streak: 9, lastActive: Date.now() - 15 * 60000 },
-                student5: { name: 'Eshaan Gupta', marks: 95, streak: 15, lastActive: Date.now() - 1 * 60000 }
-            }
-        };
+        // Helper to read/write central DB
+        function getUsersDB() {
+            return JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students": [], "teachers": [], "parents": []}');
+        }
 
-        // Initialize
+        function saveUsersDB(db) {
+            localStorage.setItem('acadlinkUsers', JSON.stringify(db));
+        }
+
+        function getLoggedInUser() {
+            return JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+        }
+
+        function saveLoggedInUser(user) {
+            localStorage.setItem('loggedInUser', JSON.stringify(user));
+        }
+
+        // Ensure only teachers access this page
+        function checkTeacherAccess() {
+            const role = localStorage.getItem('userRole');
+            if (role !== 'teacher') {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // State
+        let currentTeacher = null;
+        let db = null;
+        const RECOMMENDED_WEEKLY = 240; // minutes
+
         document.addEventListener('DOMContentLoaded', function() {
+            if (!checkTeacherAccess()) return;
+
+            db = getUsersDB();
+            const logged = getLoggedInUser();
+            if (!logged) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Find teacher in DB to get latest assignedClasses
+            currentTeacher = db.teachers.find(t => t.id === logged.id) || logged;
+            // Ensure structure
+            currentTeacher.assignedClasses = currentTeacher.assignedClasses || [];
+
+            // Update header
+            document.getElementById('teacherName').textContent = `${currentTeacher.firstName || ''} ${currentTeacher.lastName || ''}`.trim() || 'Teacher';
+            document.getElementById('teacherClass').textContent = currentTeacher.assignedClasses.length ? formatAssignedClasses(currentTeacher.assignedClasses) : 'No classes selected';
+
+            renderClassSelection();
+            renderStudentsList();
             refreshActivityStatus();
-            setInterval(checkInactivity, 60000); // Check every minute
-            setInterval(refreshActivityStatus, 30000); // Refresh status every 30 seconds
+
+            setInterval(refreshActivityStatus, 30000);
+            setInterval(checkTeacherInactivity, 60000);
+
+            // composer live preview bindings
+            ['priorityTopic','priorityDuration','selectedDifficulty'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateComposerPreview);
+            });
+            document.getElementById('studentSearch').addEventListener('input', () => renderStudentsList());
+            document.getElementById('studentSort').addEventListener('change', () => renderStudentsList());
         });
 
-        // Check if teacher is inactive
-        function checkInactivity() {
-            const timeSinceActive = Date.now() - teacherData.lastActive;
-            const oneHour = 60 * 60 * 1000;
+        function formatAssignedClasses(arr) {
+            return arr.map(a => `${a.class}-${a.section || ''}`).join(', ');
+        }
 
-            if (timeSinceActive > oneHour && teacherData.isActive) {
-                teacherData.isActive = false;
-                document.getElementById('inactiveNotif').style.display = 'flex';
+        // Render available class/section combos from students
+        function renderClassSelection() {
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '8px';
+
+            const header = document.createElement('div');
+            header.innerHTML = '<strong>Select Classes & Sections you manage</strong>';
+            container.appendChild(header);
+
+            // derive unique combos
+            const combos = {};
+            db.students.forEach(s => {
+                const cls = s.class || 'Unassigned';
+                const sec = s.section || '';
+                const key = cls + '||' + sec;
+                combos[key] = { class: cls, section: sec };
+            });
+
+            const listDiv = document.createElement('div');
+            listDiv.style.display = 'flex';
+            listDiv.style.flexWrap = 'wrap';
+            listDiv.style.gap = '10px';
+
+            Object.keys(combos).forEach(key => {
+                const combo = combos[key];
+                const id = `combo_${btoa(key)}`;
+                const label = document.createElement('label');
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '6px';
+
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.id = id;
+                cb.dataset.cls = combo.class;
+                cb.dataset.sec = combo.section;
+                if (currentTeacher.assignedClasses.find(a => a.class === combo.class && (a.section || '') === (combo.section || ''))) {
+                    cb.checked = true;
+                }
+                cb.addEventListener('change', onAssignedClassesChange);
+
+                const span = document.createElement('span');
+                span.textContent = combo.class + (combo.section ? ' - ' + combo.section : '');
+
+                label.appendChild(cb);
+                label.appendChild(span);
+                listDiv.appendChild(label);
+            });
+
+            container.appendChild(listDiv);
+
+            // Place at top of container (below header)
+            const parent = document.querySelector('.container');
+            // remove existing selection area if present
+            const existing = document.getElementById('classSelectionArea');
+            if (existing) existing.remove();
+
+            const wrapper = document.createElement('div');
+            wrapper.id = 'classSelectionArea';
+            wrapper.className = 'card';
+            wrapper.style.marginBottom = '20px';
+            wrapper.innerHTML = '<h2>🏷️ Manage Classes</h2>';
+            wrapper.appendChild(container);
+
+            parent.insertBefore(wrapper, parent.firstChild.nextSibling);
+        }
+
+        function onAssignedClassesChange() {
+            const boxes = Array.from(document.querySelectorAll('#classSelectionArea input[type=checkbox]'));
+            const selected = boxes.filter(b => b.checked).map(b => ({ class: b.dataset.cls, section: b.dataset.sec }));
+            currentTeacher.assignedClasses = selected;
+
+            // persist to DB and loggedInUser
+            const dbLocal = getUsersDB();
+            const ti = dbLocal.teachers.findIndex(t => t.id === currentTeacher.id);
+            if (ti >= 0) {
+                dbLocal.teachers[ti].assignedClasses = selected;
             }
+            saveUsersDB(dbLocal);
+            saveLoggedInUser(Object.assign(getLoggedInUser() || {}, { assignedClasses: selected }));
+
+            document.getElementById('teacherClass').textContent = selected.length ? formatAssignedClasses(selected) : 'No classes selected';
+            renderStudentsList();
+            refreshActivityStatus();
         }
 
-        // Mark teacher as active
-        function markActive() {
-            teacherData.lastActive = Date.now();
-            teacherData.isActive = true;
-            document.getElementById('inactiveNotif').style.display = 'none';
-            alert('✅ You have been marked as active! Students are now notified.');
+        // Filter students for this teacher
+        function getManagedStudents() {
+            if (!currentTeacher.assignedClasses || currentTeacher.assignedClasses.length === 0) return [];
+            return db.students.filter(s => currentTeacher.assignedClasses.some(a => a.class === (s.class || 'Unassigned') && (a.section || '') === (s.section || '')) );
         }
 
-        // Check-in now
-        function checkInNow() {
-            markActive();
+        function renderStudentsList() {
+            const listContainer = document.getElementById('studentMarks');
+            const selectEl = document.getElementById('studentSelect');
+            listContainer.innerHTML = '';
+            selectEl.innerHTML = '<option value="">-- Select Student --</option>';
+
+            const students = getManagedStudents();
+            if (students.length === 0) {
+                listContainer.innerHTML = '<div class="inactive-notice"><p>No students found for your selected classes. Please select classes/sections above.</p></div>';
+                renderActivityTable(students);
+                renderAssignmentsPanel();
+                return;
+            }
+
+            // award daily +0.5 marks once per day if student joined today
+            const todayKey = new Date().toISOString().slice(0,10);
+            let dbLocal = getUsersDB();
+            let updated = false;
+            students.forEach(s => {
+                const lastDaily = s.lastDailyMarkDate || '';
+                if (s.lastActive) {
+                    const lastActiveDate = new Date(s.lastActive).toISOString().slice(0,10);
+                    if (lastActiveDate === todayKey && lastDaily !== todayKey) {
+                        s.marks = (Number(s.marks) || 0) + 0.5;
+                        s.lastDailyMarkDate = todayKey;
+                        updated = true;
+                    }
+                }
+            });
+            if (updated) {
+                // persist updates to DB
+                dbLocal.students = db.students.map(st => {
+                    const found = students.find(x => x.id === st.id);
+                    return found ? Object.assign(st, found) : st;
+                });
+                saveUsersDB(dbLocal);
+                db = dbLocal;
+            }
+
+            // apply search and sort
+            const search = (document.getElementById('studentSearch').value || '').toLowerCase().trim();
+            let filtered = students.filter(s => {
+                const name = `${s.firstName} ${s.lastName}`.toLowerCase();
+                return !search || name.includes(search);
+            });
+            const sortBy = document.getElementById('studentSort').value || 'name';
+            filtered.sort((a,b) => {
+                if (sortBy === 'name') return (`${a.firstName} ${a.lastName}`).localeCompare(`${b.firstName} ${b.lastName}`);
+                if (sortBy === 'marks') return (Number(b.marks||0) - Number(a.marks||0));
+                return 0;
+            });
+
+            filtered.forEach(s => {
+                s.homeworks = s.homeworks || [];
+                const item = document.createElement('div');
+                item.className = 'student-item';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'student-name';
+                nameSpan.textContent = `${s.firstName} ${s.lastName}`;
+
+                const hwSpan = document.createElement('span');
+                hwSpan.className = 'marks-display';
+                hwSpan.textContent = `${s.homeworks.length} HWs`;
+
+                const marksInput = document.createElement('input');
+                marksInput.type = 'number';
+                marksInput.min = 0; marksInput.max = 100;
+                marksInput.value = s.marks || 0;
+                marksInput.style.width = '72px';
+                marksInput.style.padding = '6px';
+                marksInput.style.border = '1px solid #e6e9f8';
+                marksInput.style.borderRadius = '6px';
+                marksInput.addEventListener('change', () => {
+                    const v = Number(marksInput.value);
+                    if (!isNaN(v) && v >=0 && v <=100) {
+                        const dbNow = getUsersDB();
+                        const stu = dbNow.students.find(x => x.id == s.id);
+                        if (stu) {
+                            stu.marks = v;
+                            saveUsersDB(dbNow);
+                            db = dbNow;
+                            updateTeacherActivity();
+                            renderActivityTable(getManagedStudents());
+                        }
+                    } else {
+                        alert('Enter a value 0-100');
+                        marksInput.value = s.marks || 0;
+                    }
+                });
+
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'edit-marks-btn';
+                viewBtn.textContent = 'View';
+                viewBtn.addEventListener('click', () => viewStudentMarks(s.id));
+
+                item.appendChild(nameSpan);
+                item.appendChild(hwSpan);
+                item.appendChild(marksInput);
+                item.appendChild(viewBtn);
+
+                listContainer.appendChild(item);
+
+                const opt = document.createElement('option');
+                opt.value = s.id; opt.textContent = `${s.firstName} ${s.lastName}`;
+                selectEl.appendChild(opt);
+            });
+
+            renderActivityTable(students);
+            renderAssignmentsPanel();
         }
 
-        // Refresh activity status
+        function renderActivityTable(students) {
+            const tbody = document.querySelector('.activity-table tbody');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                s.homeworks = s.homeworks || [];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.firstName} ${s.lastName}</td>
+                    <td>${s.lastActive ? timeAgo(s.lastActive) : 'N/A'}</td>
+                    <td>${(s.lastActive && (Date.now() - s.lastActive) < 24*3600000) ? '<span class="activity-status status-active">Active</span>' : '<span class="activity-status status-inactive">Inactive</span>'}</td>
+                    <td>${s.homeworks.length}/${s.homeworks.length}</td>
+                    <td>${s.marks || 0}</td>
+                    <td><button class="edit-marks-btn" onclick="alert('Message sent to ${s.firstName} ${s.lastName}')">Message</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function timeAgo(ts) {
+            const diff = Date.now() - ts;
+            if (diff < 60000) return 'just now';
+            if (diff < 3600000) return Math.round(diff/60000) + ' mins ago';
+            if (diff < 86400000) return Math.round(diff/3600000) + ' hours ago';
+            return Math.round(diff/86400000) + ' days ago';
+        }
+
         function refreshActivityStatus() {
+            const students = getManagedStudents();
             let activeCount = 0;
+            let ongoingCount = 0;
             let needHelpCount = 0;
-
-            for (let key in teacherData.students) {
-                const student = teacherData.students[key];
-                const timeSinceActive = Date.now() - student.lastActive;
-                if (timeSinceActive < 15 * 60 * 1000) { // Less than 15 minutes
-                    activeCount++;
-                }
-                if (timeSinceActive > 2 * 3600000) { // More than 2 hours
-                    needHelpCount++;
-                }
-            }
+            students.forEach(s => {
+                if (s.lastActive && (Date.now() - s.lastActive) < 24*3600000) activeCount++; // 24h active
+                // count assignments in last 7 days
+                const recentHomeworks = (s.homeworks || []).filter(h => h.createdAt && (Date.now() - h.createdAt) <= 7*24*3600000);
+                ongoingCount += recentHomeworks.length;
+                if (!s.lastActive || (Date.now() - s.lastActive) > 2*3600000) needHelpCount++;
+            });
 
             document.getElementById('activeCount').textContent = activeCount;
+            document.getElementById('ongoingCount').textContent = ongoingCount;
             document.getElementById('needHelpCount').textContent = needHelpCount;
+        }
 
-            // Show low load notification if not many are active
-            if (activeCount < 5) {
-                document.getElementById('lowLoadNotif').style.display = 'flex';
+        function computeWeeklyLoad() {
+            const students = getManagedStudents();
+            let total = 0;
+            students.forEach(s => {
+                const recent = (s.homeworks || []).filter(h => h.createdAt && (Date.now() - h.createdAt) <= 7*24*3600000);
+                total += recent.reduce((sum, h) => sum + (Number(h.duration) || 0), 0);
+            });
+            return total;
+        }
+
+        function checkTeacherInactivity() {
+            const dbLocal = getUsersDB();
+            const t = dbLocal.teachers.find(x => x.id === currentTeacher.id) || currentTeacher;
+            const last = t.lastActivity || t.lastLogin || 0;
+            const fortyEight = 48 * 3600000;
+            if (!last || (Date.now() - last) > fortyEight) {
+                document.getElementById('teacherInactiveNotif').style.display = 'flex';
             } else {
-                document.getElementById('lowLoadNotif').style.display = 'none';
+                document.getElementById('teacherInactiveNotif').style.display = 'none';
             }
         }
 
-        // Select difficulty
+        // Difficulty selector
         function selectDifficulty(level) {
             document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             document.getElementById('selectedDifficulty').value = level;
+            updateComposerPreview();
         }
 
-        // Set priority
+        // Set priority -> send homework to selected classes
         function setPriority() {
             const topic = document.getElementById('priorityTopic').value;
             const difficulty = document.getElementById('selectedDifficulty').value;
@@ -951,14 +1244,16 @@
                 return;
             }
 
-            teacherData.priority = { topic, difficulty, duration, description };
-            
-            // Show success message
+            const hw = { id: Date.now(), topic, difficulty, duration: Number(duration), description, assignedBy: currentTeacher.id, createdAt: Date.now() };
+            const assigned = sendHomeworkToManagedStudents(hw);
+
+            // update teacher last activity
+            updateTeacherActivity();
+
             const successDiv = document.getElementById('prioritySuccess');
             successDiv.style.display = 'block';
-            successDiv.innerHTML = `✅ Priority "${topic}" (${difficulty.toUpperCase()}) has been set and students have been notified!`;
+            successDiv.innerHTML = `✅ Homework "${topic}" sent to ${getManagedStudents().length} students.`;
 
-            // Clear form
             document.getElementById('priorityTopic').value = '';
             document.getElementById('priorityDuration').value = '';
             document.getElementById('priorityDescription').value = '';
@@ -966,6 +1261,205 @@
             document.getElementById('selectedDifficulty').value = '';
 
             setTimeout(() => { successDiv.style.display = 'none'; }, 3000);
+        }
+
+        function sendHomeworkToManagedStudents(hw) {
+            const dbLocal = getUsersDB();
+            const students = dbLocal.students;
+            let assignedCount = 0;
+            students.forEach(s => {
+                if (currentTeacher.assignedClasses.some(a => a.class === (s.class || 'Unassigned') && (a.section || '') === (s.section || ''))) {
+                    s.homeworks = s.homeworks || [];
+                    s.homeworks.push(hw);
+                    assignedCount++;
+                }
+            });
+            saveUsersDB(dbLocal);
+            db = dbLocal;
+            renderStudentsList();
+            refreshActivityStatus();
+            return assignedCount;
+        }
+
+        // Assignments panel: list assignments across students for teacher's sections
+        function renderAssignmentsPanel() {
+            const container = document.getElementById('assignmentsList');
+            container.innerHTML = '';
+            const students = getManagedStudents();
+            const map = {}; // hwId -> {hw, sections:Set}
+            students.forEach(s => {
+                (s.homeworks || []).forEach(h => {
+                    if (!h || !h.id) return;
+                    if (!map[h.id]) map[h.id] = { hw: h, sections: new Set() };
+                    map[h.id].sections.add(s.section || '');
+                });
+            });
+
+            const keys = Object.keys(map);
+            if (keys.length === 0) {
+                container.innerHTML = '<div style="color:#666;font-size:13px;">No assignments for your sections.</div>';
+                return;
+            }
+
+            keys.forEach(id => {
+                const ent = map[id];
+                const hw = ent.hw;
+                const card = document.createElement('div');
+                card.style.display = 'flex';
+                card.style.justifyContent = 'space-between';
+                card.style.alignItems = 'center';
+                card.style.background = '#f8fafc';
+                card.style.padding = '10px';
+                card.style.borderRadius = '8px';
+
+                const left = document.createElement('div');
+                left.innerHTML = `<strong>${hw.topic}</strong><div style="font-size:13px;color:#666;">${Array.from(ent.sections).join(', ')} • ${hw.duration || 0} min</div>`;
+
+                const right = document.createElement('div');
+                right.style.display = 'flex';
+                right.style.gap = '8px';
+
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn-primary';
+                completeBtn.textContent = hw.status === 'completed' ? 'Completed' : 'Mark Completed';
+                completeBtn.onclick = () => markAssignmentCompleted(hw.id);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.textContent = 'Remove';
+                delBtn.onclick = () => deleteAssignment(hw.id);
+
+                right.appendChild(completeBtn);
+                right.appendChild(delBtn);
+                card.appendChild(left);
+                card.appendChild(right);
+                container.appendChild(card);
+            });
+        }
+
+        function markAssignmentCompleted(hwId) {
+            const dbLocal = getUsersDB();
+            dbLocal.students.forEach(s => {
+                s.homeworks = (s.homeworks || []).map(h => {
+                    if (h.id === hwId && currentTeacher.assignedClasses.some(a => a.class === (s.class||'Unassigned') && (a.section||'') === (s.section||''))) {
+                        h.status = 'completed';
+                        h.completedAt = Date.now();
+                    }
+                    return h;
+                });
+            });
+            saveUsersDB(dbLocal);
+            db = dbLocal;
+            renderStudentsList();
+            renderAssignmentsPanel();
+        }
+
+        function deleteAssignment(hwId) {
+            if (!confirm('Remove this assignment for all students in your sections?')) return;
+            const dbLocal = getUsersDB();
+            dbLocal.students.forEach(s => {
+                if (currentTeacher.assignedClasses.some(a => a.class === (s.class||'Unassigned') && (a.section||'') === (s.section||''))) {
+                    s.homeworks = (s.homeworks || []).filter(h => h.id !== hwId);
+                }
+            });
+            saveUsersDB(dbLocal);
+            db = dbLocal;
+            renderStudentsList();
+            renderAssignmentsPanel();
+        }
+
+        function exportAssignments() {
+            const students = getManagedStudents();
+            const map = {};
+            students.forEach(s => (s.homeworks||[]).forEach(h => map[h.id] = h));
+            const arr = Object.values(map);
+            const data = JSON.stringify(arr, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'assignments.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function importAssignments() {
+            const raw = prompt('Paste assignments JSON array');
+            if (!raw) return;
+            try {
+                const arr = JSON.parse(raw);
+                const dbLocal = getUsersDB();
+                arr.forEach(hw => {
+                    // assign to students in current teacher sections
+                    dbLocal.students.forEach(s => {
+                        if (currentTeacher.assignedClasses.some(a => a.class === (s.class||'Unassigned') && (a.section||'') === (s.section||''))) {
+                            s.homeworks = s.homeworks || [];
+                            s.homeworks.push(hw);
+                        }
+                    });
+                });
+                saveUsersDB(dbLocal);
+                db = dbLocal;
+                renderStudentsList();
+                renderAssignmentsPanel();
+                alert('Import complete');
+            } catch (e) {
+                alert('Invalid JSON');
+            }
+        }
+
+        function viewStudentMarks(studentId) {
+            const dbLocal = getUsersDB();
+            const s = dbLocal.students.find(x => x.id == studentId);
+            if (!s) return alert('Student not found');
+            document.getElementById('modalStudentName').value = `${s.firstName} ${s.lastName}`;
+            document.getElementById('modalMarks').value = s.marks || 0;
+            document.getElementById('editMarksModal').classList.add('active');
+            window.currentEditStudent = { studentId };
+        }
+
+        function updateTeacherActivity() {
+            const dbLocal = getUsersDB();
+            const ti = dbLocal.teachers.findIndex(t => t.id === currentTeacher.id);
+            const now = Date.now();
+            if (ti >= 0) {
+                dbLocal.teachers[ti].lastActivity = now;
+            }
+            // also update loggedInUser
+            const logged = getLoggedInUser() || {};
+            logged.lastActivity = now;
+            saveLoggedInUser(logged);
+            saveUsersDB(dbLocal);
+            currentTeacher.lastActivity = now;
+        }
+
+        function quickAddSuggested() {
+            const hw = { id: Date.now(), topic: 'Quick practice', difficulty: 'easy', duration: 15, description: 'Short practice', assignedBy: currentTeacher.id, createdAt: Date.now() };
+            const assigned = sendHomeworkToManagedStudents(hw);
+            updateTeacherActivity();
+            alert(`✅ Added ${assigned} assignments (15 min each).`);
+        }
+
+        function openQuickComposer() {
+            document.getElementById('priorityTopic').focus();
+            document.getElementById('priorityTopic').value = 'Quick practice';
+            document.getElementById('priorityDuration').value = 15;
+            document.querySelectorAll('.difficulty-btn.easy').forEach(b => b.classList.add('selected'));
+            document.getElementById('selectedDifficulty').value = 'easy';
+            updateComposerPreview();
+        }
+
+        function openGradebook() {
+            window.scrollTo({ top: document.querySelector('.card').offsetTop, behavior: 'smooth' });
+        }
+
+        function updateComposerPreview() {
+            const topic = document.getElementById('priorityTopic').value;
+            const duration = Number(document.getElementById('priorityDuration').value) || 0;
+            const diff = document.getElementById('selectedDifficulty').value || 'N/A';
+            const weekly = computeWeeklyLoad();
+            const newTotal = weekly + duration;
+            const preview = `Topic: ${topic || '(untitled)'} — Difficulty: ${diff.toUpperCase()} — Duration: ${duration} min. This will change weekly load from ${weekly} min to ${newTotal} min.`;
+            document.getElementById('composerPreview').textContent = preview;
         }
 
         // Add marks
@@ -978,62 +1472,64 @@
                 return;
             }
 
-            if (teacherData.students[studentId]) {
-                teacherData.students[studentId].marks = marks;
-                alert(`✅ Marks updated for ${teacherData.students[studentId].name}!`);
+            const dbLocal = getUsersDB();
+            const s = dbLocal.students.find(x => x.id == studentId);
+            if (s) {
+                s.marks = marks;
+                saveUsersDB(dbLocal);
+                alert(`✅ Marks updated for ${s.firstName} ${s.lastName}!`);
                 document.getElementById('studentSelect').value = '';
                 document.getElementById('marksInput').value = '';
-                location.reload(); // Refresh to show updated marks
+                db = dbLocal;
+                renderStudentsList();
+                updateTeacherActivity();
             }
         }
 
         // Edit mark modal
-        function editMarkModal(studentId, studentName, marks, streak) {
+        function editMarkModal(studentId, studentName, marks) {
             document.getElementById('modalStudentName').value = studentName;
             document.getElementById('modalMarks').value = marks;
-            document.getElementById('modalStreak').value = streak;
             document.getElementById('editMarksModal').classList.add('active');
-            window.currentEditStudent = { studentId, studentName, marks, streak };
+            window.currentEditStudent = { studentId };
         }
-
-        // Save mark changes
         function saveMarkChanges() {
             const newMarks = parseInt(document.getElementById('modalMarks').value);
-            const newStreak = parseInt(document.getElementById('modalStreak').value);
 
-            if (isNaN(newMarks) || isNaN(newStreak) || newMarks < 0 || newMarks > 100 || newStreak < 0) {
+            if (isNaN(newMarks) || newMarks < 0 || newMarks > 100) {
                 alert('⚠️ Please enter valid values!');
                 return;
             }
 
-            if (window.currentEditStudent) {
-                teacherData.students[window.currentEditStudent.studentId].marks = newMarks;
-                teacherData.students[window.currentEditStudent.studentId].streak = newStreak;
+            const dbLocal = getUsersDB();
+            const s = dbLocal.students.find(x => x.id == window.currentEditStudent.studentId);
+            if (s) {
+                s.marks = newMarks;
+                saveUsersDB(dbLocal);
+                db = dbLocal;
                 closeModal('editMarksModal');
                 alert('✅ Changes saved successfully!');
-                location.reload();
+                renderStudentsList();
+                renderActivityTable(getManagedStudents());
+                updateTeacherActivity();
             }
         }
 
-        // Close modal
+        // Utility: close modal
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-        }
-
-        // Engage students
-        function engageStudents() {
-            alert('📝 Redirecting to assignment creation...\n\nTip: Create assignments with appropriate difficulty levels to keep students engaged!');
         }
 
         // Logout
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                alert('Logged out successfully!');
+                localStorage.removeItem('loggedInUser');
+                localStorage.removeItem('userRole');
                 window.location.href = 'login.html';
             }
         }
 
-        // Close modal when clicking outside
+        // click outside modal close
         window.onclick = function(event) {
             const modal = document.getElementById('editMarksModal');
             if (event.target === modal) {

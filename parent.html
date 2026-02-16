@@ -732,26 +732,26 @@
             
             <!-- Streak Display -->
             <div class="streak-info">
-                <div class="streak-number">🔥 12</div>
+                <div class="streak-number" id="streakNumber">🔥 -</div>
                 <div class="streak-label">Day Learning Streak</div>
             </div>
 
             <!-- Statistics -->
             <div class="progress-grid">
                 <div class="stat-card">
-                    <div class="stat-number">4.2/5</div>
+                    <div class="stat-number" id="overallGrade">-</div>
                     <div class="stat-label">Overall Grade</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">92%</div>
+                    <div class="stat-number" id="homeworkCompletion">-</div>
                     <div class="stat-label">Homework Completion</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">87%</div>
+                    <div class="stat-number" id="avgMarks">-</div>
                     <div class="stat-label">Average Marks</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">3.2 hrs</div>
+                    <div class="stat-number" id="dailyStudy">-</div>
                     <div class="stat-label">Avg. Daily Study</div>
                 </div>
             </div>
@@ -760,39 +760,8 @@
         <!-- Achievements -->
         <div class="card">
             <h2>🏆 Recent Achievements</h2>
-            <div class="achievements-grid">
-                <div class="achievement-badge">
-                    <div class="achievement-icon">⭐</div>
-                    <div class="achievement-name">Quiz Master</div>
-                </div>
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🚀</div>
-                    <div class="achievement-name">Speed Solver</div>
-                </div>
-                <div class="achievement-badge">
-                    <div class="achievement-icon">💯</div>
-                    <div class="achievement-name">Perfect Score</div>
-                </div>
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🔥</div>
-                    <div class="achievement-name">7-Day Streak</div>
-                </div>
-                <div class="achievement-badge">
-                    <div class="achievement-icon">📚</div>
-                    <div class="achievement-name">Knowledge Seeker</div>
-                </div>
-                <div class="achievement-badge locked">
-                    <div class="achievement-icon">👑</div>
-                    <div class="achievement-name">Class Topper</div>
-                </div>
-                <div class="achievement-badge locked">
-                    <div class="achievement-icon">🎖️</div>
-                    <div class="achievement-name">30-Day Streak</div>
-                </div>
-                <div class="achievement-badge locked">
-                    <div class="achievement-icon">🌟</div>
-                    <div class="achievement-name">100% Accuracy</div>
-                </div>
+            <div class="achievements-grid" id="achievementsGrid">
+                <div class="muted">No achievements yet.</div>
             </div>
         </div>
 
@@ -855,24 +824,8 @@
         <!-- Communication with Teacher -->
         <div class="card">
             <h2>💬 Messages from Teacher</h2>
-            <div class="messages-list">
-                <div class="message-item">
-                    <div class="message-sender">Mr. Sharma (Math Teacher)</div>
-                    <div class="message-text">Rahul showed excellent progress in the recent algebra test. His consistent practice is paying off! Encourage him to maintain this momentum.</div>
-                    <div class="message-time">Today, 2:15 PM</div>
-                </div>
-
-                <div class="message-item">
-                    <div class="message-sender">Ms. Patel (Science Teacher)</div>
-                    <div class="message-text">Great effort on the chemistry practicals. Just needs to work on time management during experiments.</div>
-                    <div class="message-time">Yesterday, 4:30 PM</div>
-                </div>
-
-                <div class="message-item">
-                    <div class="message-sender">Mr. Sharma (Math Teacher)</div>
-                    <div class="message-text">Please remind Rahul about the upcoming board exam. We'll be having intensive practice sessions this week.</div>
-                    <div class="message-time">Feb 12, 11:20 AM</div>
-                </div>
+            <div class="messages-list" id="messagesList">
+                <div class="muted">No messages yet.</div>
             </div>
         </div>
 
@@ -920,80 +873,191 @@
     </div>
 
     <script>
-        // Parent Data
-        let parentData = {
-            name: 'Priya Kumar',
-            email: 'priya.kumar@email.com',
-            wards: {
-                ward1: {
-                    name: 'Rahul Kumar',
-                    class: 'Class 10-A',
-                    appSuggestedTime: 180,
-                    teacherExpectedTime: 150,
-                    parentSetTime: 180,
-                    streak: 12,
-                    overallGrade: 4.2,
-                    homeworkCompletion: 92,
-                    avgMarks: 87,
-                    dailyStudyTime: 3.2,
-                    lastActive: Date.now()
-                },
-                ward2: {
-                    name: 'Priya Kumar',
-                    class: 'Class 9-B',
-                    appSuggestedTime: 150,
-                    teacherExpectedTime: 120,
-                    parentSetTime: 150,
-                    streak: 8,
-                    overallGrade: 3.8,
-                    homeworkCompletion: 88,
-                    avgMarks: 82,
-                    dailyStudyTime: 2.5,
-                    lastActive: Date.now()
+        // Dynamic parent dashboard using localStorage
+        function getCurrentParent() {
+            const raw = localStorage.getItem('loggedInUser');
+            if (!raw) return null;
+            try {
+                const parsed = JSON.parse(raw);
+                const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+                const id = parsed && (parsed.id || parsed.parentId || parsed.userId);
+                if (id) {
+                    const fresh = users.parents.find(p => String(p.id) === String(id));
+                    if (fresh) {
+                        localStorage.setItem('loggedInUser', JSON.stringify(fresh));
+                        return fresh;
+                    }
                 }
-            },
-            currentWard: 'ward1'
-        };
+                if (parsed && parsed.email) {
+                    const fresh = users.parents.find(p => p.email === parsed.email);
+                    if (fresh) { localStorage.setItem('loggedInUser', JSON.stringify(fresh)); return fresh; }
+                }
+                return parsed;
+            } catch (e) { return null; }
+        }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateWardDisplay();
+        function initParentDashboard() {
+            const parent = getCurrentParent();
+            if (!parent) { window.location.href = 'login.html'; return; }
+            document.getElementById('parentName').textContent = parent.firstName + ' ' + parent.lastName;
+            document.getElementById('parentEmail').textContent = parent.email || '';
+            renderWardSelector(parent);
             checkNotifications();
-            setInterval(checkNotifications, 300000); // Check every 5 minutes
-        });
-
-        // Select Ward
-        function selectWard(wardId, wardName) {
-            parentData.currentWard = wardId;
-            document.querySelectorAll('.ward-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateWardDisplay();
+            setInterval(checkNotifications, 300000);
         }
 
-        // Update Ward Display
-        function updateWardDisplay() {
-            const ward = parentData.wards[parentData.currentWard];
-            document.getElementById('suggestedTime').textContent = ward.appSuggestedTime;
-            document.getElementById('teacherTime').textContent = ward.teacherExpectedTime;
-            document.getElementById('customTime').value = ward.parentSetTime;
-        }
+        function renderWardSelector(parent) {
+            const selector = document.querySelector('.ward-selector');
+            selector.innerHTML = '';
+            // Add input to request ward by roll no
+            const addBox = document.createElement('div');
+            addBox.style.display = 'flex';
+            addBox.style.gap = '8px';
+            addBox.style.alignItems = 'center';
+            addBox.innerHTML = `
+                <input id="wardRoll" placeholder="Roll No" style="padding:8px;border-radius:8px;border:1px solid #e6e9f8" />
+                <input id="wardClass" placeholder="Class (optional)" style="padding:8px;border-radius:8px;border:1px solid #e6e9f8" />
+                <button class="ward-btn" onclick="requestWardConnection()">Request Ward</button>
+            `;
+            selector.appendChild(addBox);
 
-        // Set Free Time
-        function setFreeTime() {
-            const timeInput = parseInt(document.getElementById('customTime').value);
-            
-            if (isNaN(timeInput) || timeInput < 30 || timeInput > 480) {
-                alert('⚠️ Please enter a valid time between 30 and 480 minutes!');
+            // Render accepted wards as buttons
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const wards = (parent.wards || []).slice();
+            if (wards.length === 0) {
+                const msg = document.createElement('div'); msg.className = 'muted'; msg.textContent = 'No wards connected yet.'; selector.appendChild(msg);
                 return;
             }
-
-            const ward = parentData.wards[parentData.currentWard];
-            ward.parentSetTime = timeInput;
-
-            const successMsg = document.getElementById('timeSuccess');
-            successMsg.style.display = 'block';
-            setTimeout(() => { successMsg.style.display = 'none'; }, 3000);
+            wards.forEach(sid => {
+                const student = users.students.find(s => String(s.id) === String(sid));
+                if (!student) return;
+                const btn = document.createElement('button');
+                btn.className = 'ward-btn';
+                btn.textContent = `${student.firstName} ${student.lastName} (${student.class || '-'})`;
+                btn.onclick = () => renderSelectedWard(student.id);
+                selector.appendChild(btn);
+            });
+            // auto-render first connected ward
+            if (wards.length > 0) {
+                const first = users.students.find(s => String(s.id) === String(wards[0]));
+                if (first) renderSelectedWard(first.id);
+            }
         }
+
+        function requestWardConnection() {
+            const roll = document.getElementById('wardRoll').value.trim();
+            const cls = document.getElementById('wardClass').value.trim();
+            const parent = getCurrentParent();
+            if (!roll) { alert('Please enter the student roll number.'); return; }
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const student = users.students.find(s => (s.rollNo && String(s.rollNo) === String(roll)) && (cls ? s.class === cls : true));
+            if (!student) { alert('Student not found with that roll number/class.'); return; }
+
+            // Add request to student.parentRequests
+            student.parentRequests = student.parentRequests || [];
+            // avoid duplicate pending
+            const exists = student.parentRequests.find(r => String(r.parentId) === String(parent.id) && r.status === 'pending');
+            if (exists) { alert('You already requested connection for this student.'); return; }
+            student.parentRequests.push({ parentId: parent.id, parentName: parent.firstName + ' ' + parent.lastName, parentEmail: parent.email, date: new Date().toISOString(), status: 'pending' });
+
+            // track requested wards on parent (optional)
+            parent.requestedWards = parent.requestedWards || [];
+            if (!parent.requestedWards.find(r => String(r) === String(student.id))) parent.requestedWards.push(student.id);
+
+            // save
+            users.students = users.students.map(s => s.id === student.id ? student : s);
+            users.parents = users.parents.map(p => p.id === parent.id ? parent : p);
+            localStorage.setItem('acadlinkUsers', JSON.stringify(users));
+            localStorage.setItem('loggedInUser', JSON.stringify(parent));
+
+            alert('Connection request sent. The student must accept to complete linking.');
+            renderWardSelector(parent);
+        }
+
+        function renderSelectedWard(studentId) {
+            window.currentWardId = studentId;
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const student = users.students.find(s => String(s.id) === String(studentId));
+            if (!student) return;
+
+            // Homeworks
+            const list = document.querySelector('.homework-list');
+            if (!student.homeworks || student.homeworks.length === 0) {
+                list.innerHTML = '<div class="muted">No homeworks for this ward.</div>';
+            } else {
+                let html = '';
+                student.homeworks.slice().reverse().forEach(h => {
+                    const status = h.completed ? '<span class="status-badge status-completed">✓ Completed</span>' : '<span class="status-badge status-pending">⏳ Pending</span>';
+                    html += `<div class="homework-item ${h.completed? 'completed': 'pending'}"><div><div class="homework-title">${h.title}</div><div class="homework-due">${h.dueDate? 'Due: '+h.dueDate : ''}</div></div><div>${status}</div><div>${h.score? 'Score: '+h.score : ''}</div><div>${h.rating? '⭐⭐⭐⭐⭐':''}</div></div>`;
+                });
+                list.innerHTML = html;
+            }
+
+            // Performance stats
+            const overallGradeEl = document.getElementById('overallGrade');
+            const hwCompEl = document.getElementById('homeworkCompletion');
+            const avgMarksEl = document.getElementById('avgMarks');
+            const dailyStudyEl = document.getElementById('dailyStudy');
+            const streakEl = document.getElementById('streakNumber');
+
+            const overallGrade = student.overallGrade || (student.points ? (Math.min(5, (student.points/20).toFixed(1))) : '-');
+            overallGradeEl.textContent = overallGrade || '-';
+
+            // homework completion: compute from homeworks
+            let hwCompletion = '-';
+            if (student.homeworks && student.homeworks.length > 0) {
+                const done = student.homeworks.filter(h => h.completed).length;
+                hwCompletion = Math.round((done / student.homeworks.length) * 100) + '%';
+            } else if (student.homeworkCompletion) hwCompletion = (student.homeworkCompletion + '%');
+            hwCompEl.textContent = hwCompletion;
+
+            // avg marks
+            let avg = '-';
+            if (student.homeworks && student.homeworks.length > 0) {
+                const scores = student.homeworks.map(h => h.score).filter(s => typeof s === 'number');
+                if (scores.length) avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+            } else if (typeof student.avgMarks === 'number') avg = student.avgMarks;
+            avgMarksEl.textContent = (avg === '-') ? '-' : (avg + '%');
+
+            dailyStudyEl.textContent = student.dailyStudyTime ? (student.dailyStudyTime + ' hrs') : (student.avgDailyStudy ? (student.avgDailyStudy + ' hrs') : '-');
+            streakEl.textContent = '🔥 ' + (student.streak || '-');
+
+            // Achievements
+            const achievementsGrid = document.getElementById('achievementsGrid');
+            achievementsGrid.innerHTML = '';
+            const achs = student.achievements || [];
+            if (!achs || achs.length === 0) {
+                achievementsGrid.innerHTML = '<div class="muted">No achievements yet.</div>';
+            } else {
+                achs.slice().reverse().forEach(a => {
+                    const badge = document.createElement('div'); badge.className = 'achievement-badge';
+                    const icon = document.createElement('div'); icon.className = 'achievement-icon'; icon.textContent = a.icon || '🏆';
+                    const name = document.createElement('div'); name.className = 'achievement-name'; name.textContent = a.title || a.name || 'Achievement';
+                    badge.appendChild(icon); badge.appendChild(name);
+                    achievementsGrid.appendChild(badge);
+                });
+            }
+
+            // Messages from teachers
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = '';
+            const msgs = student.teacherMessages || student.messages || student.notifications || [];
+            if (!msgs || msgs.length === 0) {
+                messagesList.innerHTML = '<div class="muted">No messages yet.</div>';
+            } else {
+                msgs.slice().reverse().forEach(m => {
+                    const div = document.createElement('div'); div.className = 'message-item';
+                    const sender = document.createElement('div'); sender.className = 'message-sender'; sender.textContent = (m.fromName || m.sender || m.teacherName || 'Teacher');
+                    const text = document.createElement('div'); text.className = 'message-text'; text.textContent = m.text || m.message || m.body || '';
+                    const time = document.createElement('div'); time.className = 'message-time'; time.textContent = m.date ? new Date(m.date).toLocaleString() : (m.time || '');
+                    div.appendChild(sender); div.appendChild(text); div.appendChild(time);
+                    messagesList.appendChild(div);
+                });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initParentDashboard);
 
         // Check Notifications
         function checkNotifications() {
@@ -1049,7 +1113,16 @@
         }
 
         function viewTeacherMessages() {
-            alert('Viewing all teacher messages...');
+            const id = window.currentWardId;
+            if (!id) { alert('Please select a ward to view messages.'); return; }
+            const users = JSON.parse(localStorage.getItem('acadlinkUsers') || '{"students":[],"teachers":[],"parents":[]}');
+            const student = users.students.find(s => String(s.id) === String(id));
+            if (!student) { alert('Ward not found.'); return; }
+            const msgs = student.teacherMessages || student.messages || student.notifications || [];
+            if (!msgs || msgs.length === 0) { alert('No messages for this ward.'); return; }
+            let txt = 'Messages:\n\n';
+            msgs.slice().reverse().forEach(m => { txt += `${m.date? new Date(m.date).toLocaleString() : ''} — ${(m.fromName||m.sender||m.teacherName||'Teacher')}: ${m.text||m.message||m.body||''}\n\n`; });
+            alert(txt);
         }
 
         function viewProgress() {
